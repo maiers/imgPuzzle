@@ -1,0 +1,350 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<Form version="1.5" maxVersion="1.8" type="org.netbeans.modules.form.forminfo.JFrameFormInfo">
+  <NonVisualComponents>
+    <Container class="javax.swing.JDialog" name="selectDirectoryDialog">
+
+      <Layout>
+        <DimensionLayout dim="0">
+          <Group type="103" groupAlignment="0" attributes="0">
+              <Component id="directoryChooser" alignment="0" pref="614" max="32767" attributes="0"/>
+          </Group>
+        </DimensionLayout>
+        <DimensionLayout dim="1">
+          <Group type="103" groupAlignment="0" attributes="0">
+              <Component id="directoryChooser" alignment="0" pref="419" max="32767" attributes="0"/>
+          </Group>
+        </DimensionLayout>
+      </Layout>
+      <SubComponents>
+        <Component class="javax.swing.JFileChooser" name="directoryChooser">
+          <Properties>
+            <Property name="fileSelectionMode" type="int" value="1"/>
+          </Properties>
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="directoryChooserActionPerformed"/>
+          </Events>
+        </Component>
+      </SubComponents>
+    </Container>
+    <Component class="javax.swing.ButtonGroup" name="tileButtonGroup">
+    </Component>
+    <Component class="javax.swing.ButtonGroup" name="screenButtonGroup">
+    </Component>
+    <Menu class="javax.swing.JMenuBar" name="mainMenuBar">
+      <SubComponents>
+        <Menu class="javax.swing.JMenu" name="fileMenu">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="File"/>
+          </Properties>
+          <SubComponents>
+            <MenuItem class="javax.swing.JMenuItem" name="buttonFiles">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Open directory"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="buttonFilesActionPerformed"/>
+              </Events>
+            </MenuItem>
+            <MenuItem class="javax.swing.JMenuItem" name="buttonExit">
+              <Properties>
+                <Property name="mnemonic" type="int" value="120"/>
+                <Property name="text" type="java.lang.String" value="Exit"/>
+                <Property name="toolTipText" type="java.lang.String" value="Exit the application"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="buttonExitActionPerformed"/>
+              </Events>
+            </MenuItem>
+          </SubComponents>
+        </Menu>
+        <Menu class="javax.swing.JMenu" name="settingsMenu">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="Settings"/>
+          </Properties>
+          <SubComponents>
+            <Menu class="javax.swing.JMenu" name="tileMenu">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Tiles"/>
+              </Properties>
+              <AuxValues>
+                <AuxValue name="JavaCodeGenerator_LayoutCodePre" type="java.lang.String" value="for (int i = 3; i &lt; 7; i++) {&#xd;&#xa;    for (int j = 0; j &lt; 2; j++) {&#xd;&#xa;        JRadioButtonMenuItem btn = new JRadioButtonMenuItem(setTileCount);&#xd;&#xa;        tileButtonGroup.add(btn);&#xd;&#xa;        btn.setText(&quot;&quot; + i * (i+j));&#xd;&#xa;        btn.setActionCommand(i + &quot;,&quot; + (i+j));&#xd;&#xa;        btn.setSelected(imagePuzzlePanel1.getModel().getNumberOfTiles() == i * (i+j));&#xd;&#xa;        tileMenu.add(btn);&#xd;&#xa;    }&#xd;&#xa;}"/>
+              </AuxValues>
+            </Menu>
+            <Menu class="javax.swing.JMenu" name="screenMenu">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Output"/>
+              </Properties>
+              <AuxValues>
+                <AuxValue name="JavaCodeGenerator_LayoutCodePre" type="java.lang.String" value="for (GraphicsDevice d : getScreenDevices()) {&#xd;&#xa;    JCheckBoxMenuItem btn = new JCheckBoxMenuItem(setFullScreenGraphicsDevice);&#xd;&#xa;    screenButtonGroup.add(btn);&#xd;&#xa;    btn.setText(String.format(&quot;%s [%d:%d]&quot;, d.getIDstring(), d.getDisplayMode().getWidth(), d.getDisplayMode().getHeight()));&#xd;&#xa;    btn.setActionCommand(d.getIDstring());&#xd;&#xa;    btn.setSelected(d.getIDstring().equals(getFullScreenTarget()));&#xd;&#xa;    screenMenu.add(btn);&#xd;&#xa;}"/>
+              </AuxValues>
+            </Menu>
+          </SubComponents>
+        </Menu>
+        <Menu class="javax.swing.JMenu" name="menuAbout">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="About"/>
+          </Properties>
+        </Menu>
+      </SubComponents>
+    </Menu>
+  </NonVisualComponents>
+  <Properties>
+    <Property name="defaultCloseOperation" type="int" value="3"/>
+  </Properties>
+  <SyntheticProperties>
+    <SyntheticProperty name="menuBar" type="java.lang.String" value="mainMenuBar"/>
+    <SyntheticProperty name="formSizePolicy" type="int" value="1"/>
+  </SyntheticProperties>
+  <Events>
+    <EventHandler event="windowClosed" listener="java.awt.event.WindowListener" parameters="java.awt.event.WindowEvent" handler="formWindowClosed"/>
+  </Events>
+  <AuxValues>
+    <AuxValue name="FormSettings_autoResourcing" type="java.lang.Integer" value="0"/>
+    <AuxValue name="FormSettings_autoSetComponentName" type="java.lang.Boolean" value="false"/>
+    <AuxValue name="FormSettings_generateFQN" type="java.lang.Boolean" value="true"/>
+    <AuxValue name="FormSettings_generateMnemonicsCode" type="java.lang.Boolean" value="false"/>
+    <AuxValue name="FormSettings_i18nAutoMode" type="java.lang.Boolean" value="false"/>
+    <AuxValue name="FormSettings_layoutCodeTarget" type="java.lang.Integer" value="1"/>
+    <AuxValue name="FormSettings_listenerGenerationStyle" type="java.lang.Integer" value="0"/>
+    <AuxValue name="FormSettings_variablesLocal" type="java.lang.Boolean" value="false"/>
+    <AuxValue name="FormSettings_variablesModifier" type="java.lang.Integer" value="2"/>
+  </AuxValues>
+
+  <Layout>
+    <DimensionLayout dim="0">
+      <Group type="103" groupAlignment="0" attributes="0">
+          <Component id="splitPaneMain" alignment="0" max="32767" attributes="0"/>
+      </Group>
+    </DimensionLayout>
+    <DimensionLayout dim="1">
+      <Group type="103" groupAlignment="0" attributes="0">
+          <Component id="splitPaneMain" alignment="0" max="32767" attributes="0"/>
+      </Group>
+    </DimensionLayout>
+  </Layout>
+  <SubComponents>
+    <Container class="javax.swing.JSplitPane" name="splitPaneMain">
+      <Properties>
+        <Property name="dividerLocation" type="int" value="200"/>
+      </Properties>
+
+      <Layout class="org.netbeans.modules.form.compat2.layouts.support.JSplitPaneSupportLayout"/>
+      <SubComponents>
+        <Container class="javax.swing.JPanel" name="jPanel2">
+          <Properties>
+            <Property name="minimumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
+              <Dimension value="[200, 400]"/>
+            </Property>
+          </Properties>
+          <Constraints>
+            <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.support.JSplitPaneSupportLayout" value="org.netbeans.modules.form.compat2.layouts.support.JSplitPaneSupportLayout$JSplitPaneConstraintsDescription">
+              <JSplitPaneConstraints position="left"/>
+            </Constraint>
+          </Constraints>
+
+          <Layout>
+            <DimensionLayout dim="0">
+              <Group type="103" groupAlignment="1" attributes="0">
+                  <Component id="jScrollPane1" pref="199" max="32767" attributes="0"/>
+              </Group>
+            </DimensionLayout>
+            <DimensionLayout dim="1">
+              <Group type="103" groupAlignment="0" attributes="0">
+                  <Component id="jScrollPane1" alignment="1" pref="525" max="32767" attributes="0"/>
+              </Group>
+            </DimensionLayout>
+          </Layout>
+          <SubComponents>
+            <Container class="javax.swing.JScrollPane" name="jScrollPane1">
+              <AuxValues>
+                <AuxValue name="autoScrollPane" type="java.lang.Boolean" value="true"/>
+              </AuxValues>
+
+              <Layout class="org.netbeans.modules.form.compat2.layouts.support.JScrollPaneSupportLayout"/>
+              <SubComponents>
+                <Component class="javax.swing.JList" name="imageFileList">
+                  <Properties>
+                    <Property name="model" type="javax.swing.ListModel" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+                      <Connection code="getListModel()" type="code"/>
+                    </Property>
+                    <Property name="selectionMode" type="int" value="0"/>
+                  </Properties>
+                  <Events>
+                    <EventHandler event="valueChanged" listener="javax.swing.event.ListSelectionListener" parameters="javax.swing.event.ListSelectionEvent" handler="imageFileListValueChanged"/>
+                  </Events>
+                </Component>
+              </SubComponents>
+            </Container>
+          </SubComponents>
+        </Container>
+        <Container class="javax.swing.JPanel" name="jPanel1">
+          <Constraints>
+            <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.support.JSplitPaneSupportLayout" value="org.netbeans.modules.form.compat2.layouts.support.JSplitPaneSupportLayout$JSplitPaneConstraintsDescription">
+              <JSplitPaneConstraints position="right"/>
+            </Constraint>
+          </Constraints>
+
+          <Layout>
+            <DimensionLayout dim="0">
+              <Group type="103" groupAlignment="0" attributes="0">
+                  <Component id="jPanel3" alignment="1" max="32767" attributes="0"/>
+                  <Group type="102" alignment="1" attributes="0">
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Component id="imagePuzzlePanel1" max="32767" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
+                  </Group>
+              </Group>
+            </DimensionLayout>
+            <DimensionLayout dim="1">
+              <Group type="103" groupAlignment="0" attributes="0">
+                  <Group type="102" alignment="0" attributes="0">
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Component id="imagePuzzlePanel1" max="32767" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Component id="jPanel3" max="-2" attributes="0"/>
+                  </Group>
+              </Group>
+            </DimensionLayout>
+          </Layout>
+          <SubComponents>
+            <Container class="de.comci.imgp.ui.ImagePuzzlePanel" name="imagePuzzlePanel1">
+              <AuxValues>
+                <AuxValue name="JavaCodeGenerator_CreateCodePost" type="java.lang.String" value="imagePuzzlePanel1.setTransparent(true);"/>
+              </AuxValues>
+
+              <Layout>
+                <DimensionLayout dim="0">
+                  <Group type="103" groupAlignment="0" attributes="0">
+                      <EmptySpace min="0" pref="552" max="32767" attributes="0"/>
+                  </Group>
+                </DimensionLayout>
+                <DimensionLayout dim="1">
+                  <Group type="103" groupAlignment="0" attributes="0">
+                      <EmptySpace min="0" pref="405" max="32767" attributes="0"/>
+                  </Group>
+                </DimensionLayout>
+              </Layout>
+            </Container>
+            <Container class="javax.swing.JPanel" name="jPanel3">
+
+              <Layout>
+                <DimensionLayout dim="0">
+                  <Group type="103" groupAlignment="0" attributes="0">
+                      <Group type="102" attributes="0">
+                          <EmptySpace max="-2" attributes="0"/>
+                          <Group type="103" groupAlignment="0" attributes="0">
+                              <Component id="jButton1" min="-2" pref="95" max="-2" attributes="0"/>
+                              <Component id="labelSlider" min="-2" pref="61" max="-2" attributes="0"/>
+                          </Group>
+                          <EmptySpace max="-2" attributes="0"/>
+                          <Group type="103" groupAlignment="0" attributes="0">
+                              <Group type="102" attributes="0">
+                                  <Component id="jButton2" min="-2" max="-2" attributes="0"/>
+                                  <EmptySpace max="-2" attributes="0"/>
+                                  <Component id="buttonRevealImage" min="-2" pref="95" max="-2" attributes="0"/>
+                                  <EmptySpace max="-2" attributes="0"/>
+                                  <Component id="progressBarPictureVisible" max="32767" attributes="0"/>
+                                  <EmptySpace max="-2" attributes="0"/>
+                                  <Component id="buttonNextImage" min="-2" pref="94" max="-2" attributes="0"/>
+                                  <EmptySpace max="-2" attributes="0"/>
+                              </Group>
+                              <Component id="sliderSpeed" pref="461" max="32767" attributes="0"/>
+                          </Group>
+                      </Group>
+                  </Group>
+                </DimensionLayout>
+                <DimensionLayout dim="1">
+                  <Group type="103" groupAlignment="0" attributes="0">
+                      <Group type="102" alignment="0" attributes="0">
+                          <EmptySpace max="-2" attributes="0"/>
+                          <Group type="103" groupAlignment="1" max="-2" attributes="0">
+                              <Component id="progressBarPictureVisible" max="32767" attributes="0"/>
+                              <Component id="buttonNextImage" pref="33" max="32767" attributes="0"/>
+                              <Component id="jButton1" alignment="1" max="32767" attributes="0"/>
+                              <Component id="buttonRevealImage" alignment="1" max="32767" attributes="0"/>
+                              <Component id="jButton2" alignment="1" max="32767" attributes="0"/>
+                          </Group>
+                          <EmptySpace max="-2" attributes="0"/>
+                          <Group type="103" groupAlignment="0" attributes="0">
+                              <Group type="102" attributes="0">
+                                  <Component id="labelSlider" min="-2" pref="45" max="-2" attributes="0"/>
+                                  <EmptySpace min="0" pref="8" max="32767" attributes="0"/>
+                              </Group>
+                              <Component id="sliderSpeed" max="32767" attributes="0"/>
+                          </Group>
+                      </Group>
+                  </Group>
+                </DimensionLayout>
+              </Layout>
+              <SubComponents>
+                <Component class="javax.swing.JSlider" name="sliderSpeed">
+                  <Properties>
+                    <Property name="majorTickSpacing" type="int" value="1"/>
+                    <Property name="maximum" type="int" value="10"/>
+                    <Property name="minimum" type="int" value="1"/>
+                    <Property name="minorTickSpacing" type="int" value="1"/>
+                    <Property name="paintLabels" type="boolean" value="true"/>
+                    <Property name="paintTicks" type="boolean" value="true"/>
+                    <Property name="snapToTicks" type="boolean" value="true"/>
+                    <Property name="inverted" type="boolean" value="true"/>
+                    <Property name="model" type="javax.swing.BoundedRangeModel" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+                      <Connection code="imagePuzzlePanel1.getModel().getSpeedModel()" type="code"/>
+                    </Property>
+                  </Properties>
+                  <AuxValues>
+                    <AuxValue name="JavaCodeGenerator_InitCodePost" type="java.lang.String" value="Hashtable&lt;Integer,JComponent&gt; labelTable = new Hashtable&lt;&gt;();&#xd;&#xa;labelTable.put( new Integer( 1 ), new JLabel(&quot;Pretty fast&quot;) );&#xd;&#xa;labelTable.put( new Integer( 5 ), new JLabel(&quot;Average&quot;) );&#xd;&#xa;labelTable.put( new Integer( 10 ), new JLabel(&quot;Really slow&quot;) );&#xd;&#xa;sliderSpeed.setLabelTable( labelTable );"/>
+                  </AuxValues>
+                </Component>
+                <Component class="javax.swing.JLabel" name="labelSlider">
+                  <Properties>
+                    <Property name="text" type="java.lang.String" value="Speed"/>
+                  </Properties>
+                </Component>
+                <Component class="javax.swing.JButton" name="buttonRevealImage">
+                  <Properties>
+                    <Property name="text" type="java.lang.String" value="Reveal"/>
+                  </Properties>
+                  <Events>
+                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="buttonRevealImageActionPerformed"/>
+                  </Events>
+                </Component>
+                <Component class="javax.swing.JProgressBar" name="progressBarPictureVisible">
+                  <Properties>
+                    <Property name="model" type="javax.swing.BoundedRangeModel" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+                      <Connection code="imagePuzzlePanel1.getModel().getProgressModel()" type="code"/>
+                    </Property>
+                  </Properties>
+                </Component>
+                <Component class="javax.swing.JButton" name="buttonNextImage">
+                  <Properties>
+                    <Property name="text" type="java.lang.String" value="Next"/>
+                  </Properties>
+                  <Events>
+                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="buttonNextImageActionPerformed"/>
+                  </Events>
+                </Component>
+                <Component class="javax.swing.JButton" name="jButton1">
+                  <Properties>
+                    <Property name="text" type="java.lang.String" value="Start"/>
+                  </Properties>
+                  <Events>
+                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButton1ActionPerformed"/>
+                  </Events>
+                </Component>
+                <Component class="javax.swing.JButton" name="jButton2">
+                  <Properties>
+                    <Property name="text" type="java.lang.String" value="Stop"/>
+                  </Properties>
+                  <Events>
+                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButton2ActionPerformed"/>
+                  </Events>
+                </Component>
+              </SubComponents>
+            </Container>
+          </SubComponents>
+        </Container>
+      </SubComponents>
+    </Container>
+  </SubComponents>
+</Form>
