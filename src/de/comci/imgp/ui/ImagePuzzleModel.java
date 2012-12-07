@@ -13,12 +13,15 @@ import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
+import javax.swing.AbstractAction;
 import javax.swing.BoundedRangeModel;
 import javax.swing.DefaultBoundedRangeModel;
 import javax.swing.SwingWorker;
@@ -30,29 +33,75 @@ import javax.swing.event.ChangeListener;
  *
  * @author Sebastian
  */
-class ImagePuzzleModel {
+final class ImagePuzzleModel {
+    private int lastBuzzed;
+    private Timer buzzTimer;
+    private int answerDuration = 3000;
 
+    /**
+     * Amount of time (in milliseconds) a team has to answer 
+     */
+    public int getAnswerDuration() {
+        return answerDuration;
+    }
+
+    public void setAnswerDuration(int answerDuration) {
+        this.answerDuration = answerDuration;
+    }
+
+    private void buzz() {
+        
+        if (state != STATE.RUNNING && state != STATE.READY) {
+            System.err.println("buzz can only be called in ready|running state");
+            return;
+        }
+        
+        buzzTimer = new Timer(1000, new AbstractAction() {
+
+            private STATE initialState = state;
+            
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                setState(initialState);
+                if (initialState == STATE.RUNNING) {
+                    setState(STATE.HALTED);
+                    ImagePuzzleModel.this.start();
+                }
+            }
+            
+        });        
+        
+        stopRevealTimer();
+        setState(STATE.BUZZED);
+        
+        buzzTimer.setInitialDelay(answerDuration);
+        buzzTimer.setRepeats(false);
+        buzzTimer.start();
+        
+    }
+
+    public enum STATE {
+        RUNNING, HALTED, READY, REVEALED, UNINITIALIZED, BUZZED
+    }
+    
     public static final String PROPERTY_NUMBER_OF_REVEALED_TILES = "PROPERTY_NUMBER_OF_REVEALED_TILES";
     public static final String PROPERTY_TILE_NUMBER = "PROPERTY_TILE_NUMBER";
     public static final String PROPERTY_SPEED = "PROPERTY_SPEED";
     public static final String PROPERTY_TILE_COLOR = "PROPERTY_TILE_COLOR";
     public static final String PROPERTY_IMAGE = "PROPERTY_IMAGE";
-    public static final String STATE_RUNNING = "STATE_RUNNING";
-    public static final String STATE_HALTED = "STATE_HALTED";
-    public static final String STATE_READY = "STATE_READY";
-    public static final String STATE_REVEALED = "STATE_REVEALED";
-    public static final String STATE_UNINITIALIZED = "STATE_UNINITIALIZED";
+    
     private BoundedRangeModel progressModel;
-    private int numberOfTilesVertical = 6;
+    private int numberOfTilesVertical = 8;
     private File imgFile;
     private Color tileColor = new Color(25, 25, 25);
-    private Timer timer;
-    private int numberOfTiles = 36;
+    private Timer revealTimer;
+    private int numberOfTiles = 8*7;
     private Image rawImage;
-    private int numberOfTilesHorizontal = 6;
+    private int numberOfTilesHorizontal = 7;
     private List<PropertyChangeListener> propertyListener;
     private List<StateChangeListener> stateListener;
     private BoundedRangeModel speedModel;
+    private Map<Integer, String> teams;
 
     public BoundedRangeModel getSpeedModel() {
         return speedModel;
@@ -62,16 +111,22 @@ class ImagePuzzleModel {
         propertyListener = new LinkedList<>();
         stateListener = new LinkedList<>();
         revealSequence = new LinkedList<>();
-        state = STATE_UNINITIALIZED;
-        progressModel = new DefaultBoundedRangeModel(0,0,0,numberOfTiles);
-        speedModel = new DefaultBoundedRangeModel(3,0,1,10);
+        state = STATE.UNINITIALIZED;
+        teams = new HashMap<>();
+        teams.put(0, "Team 1");
+        teams.put(1, "Team 2");
+        progressModel = new DefaultBoundedRangeModel(0, 0, 0, numberOfTiles);
+        speedModel = new DefaultBoundedRangeModel(8, 0, 1, 10);
         speedModel.addChangeListener(new ChangeListener() {
-
             @Override
             public void stateChanged(ChangeEvent e) {
                 setSpeed(speedModel.getValue());
             }
         });
+    }
+
+    public void addTeam(int id, String name) {
+        teams.put(id, name);
     }
 
     public void addPropertyChangeListener(PropertyChangeListener listener) {
@@ -89,33 +144,33 @@ class ImagePuzzleModel {
         }
     }
 
-    private void fireStateChange(String newState) {
+    private void fireStateChange(STATE newState) {
         for (StateChangeListener l : stateListener) {
             l.stateChanged(newState);
         }
     }
-    private String state;
+    private STATE state;
 
-    private void startTimer() {
+    private void startRevealTimer() {
 
-        if (state.equals(STATE_READY)) {
+        if (state == STATE.READY) {
 
-            timer = new Timer(getSpeedAsDelay(), new ActionListener() {
+            revealTimer = new Timer(getSpeedAsDelay(), new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     System.out.println("timer timed");
                     revealNext();
                 }
             });
-            timer.start();
-            setState(STATE_RUNNING);
+            revealTimer.start();
+            setState(STATE.RUNNING);
 
-        } else if (state.equals(STATE_HALTED) || state.equals(STATE_REVEALED)) {
+        } else if (state == STATE.HALTED || state == STATE.REVEALED) {
 
             // assume timer exists
-            timer.setInitialDelay(0);
-            timer.start();
-            setState(STATE_RUNNING);
+            revealTimer.setInitialDelay(0);
+            revealTimer.start();
+            setState(STATE.RUNNING);
 
         } else {
             // ignore others
@@ -123,12 +178,12 @@ class ImagePuzzleModel {
 
     }
 
-    private void stopTimer() {
+    private void stopRevealTimer() {
 
-        if (state.equals(STATE_RUNNING)) {
+        if (state == STATE.RUNNING) {
 
-            timer.stop();
-            setState(STATE_HALTED);
+            revealTimer.stop();
+            setState(STATE.HALTED);
 
         }
 
@@ -136,10 +191,10 @@ class ImagePuzzleModel {
 
     private void resetTimer() {
 
-        if (state.equals(STATE_HALTED)) {
+        if (state == STATE.HALTED) {
 
-            timer = null;
-            setState(STATE_READY);
+            revealTimer = null;
+            setState(STATE.READY);
 
         }
 
@@ -153,7 +208,7 @@ class ImagePuzzleModel {
 
         if (imgFile != null && this.imgFile != imgFile && imgFile.exists() && imgFile.isFile() && imgFile.getName().toLowerCase().endsWith("jpg")) {
 
-            stopTimer();
+            stopRevealTimer();
             resetTimer();
 
             this.imgFile = imgFile;
@@ -178,7 +233,7 @@ class ImagePuzzleModel {
                         System.out.println("Image loaded from file.");
                         rawImage = get();
                         initRevealSequence();
-                        setState(STATE_READY);
+                        setState(STATE.READY);
                     } catch (InterruptedException | ExecutionException ex) {
                         Logger.getLogger(ImagePuzzlePanel.class.getName()).log(Level.SEVERE, null, ex);
                     }
@@ -190,8 +245,8 @@ class ImagePuzzleModel {
     public void reveal() {
         progressModel.setValue(progressModel.getMaximum());
         revealSequence.clear();
-        stopTimer();
-        setState(STATE_REVEALED);
+        stopRevealTimer();
+        setState(STATE.REVEALED);
     }
 
     public int getSpeedAsDelay() {
@@ -207,9 +262,9 @@ class ImagePuzzleModel {
             System.out.println(String.format("revealed item %d", r));
 
             if (revealSequence.isEmpty()) {
-                stopTimer();
+                stopRevealTimer();
             } else {
-                fireStateChange(STATE_RUNNING);
+                fireStateChange(STATE.RUNNING);
             }
         }
 
@@ -228,8 +283,8 @@ class ImagePuzzleModel {
             System.out.println(String.format("speed set to %d", speed));
             int oldSpeed = this.speedModel.getValue();
             this.speedModel.setValue(speed);
-            if (timer != null) {
-                timer.setDelay(getSpeedAsDelay());
+            if (revealTimer != null) {
+                revealTimer.setDelay(getSpeedAsDelay());
             }
             firePropertyChange(PROPERTY_SPEED, oldSpeed, speed);
         }
@@ -247,14 +302,13 @@ class ImagePuzzleModel {
 
         if (numberOfTilesVertical > 0 && numberOfTilesHorizontal > 0) {
             System.out.println(String.format("Setting number of tiles to (%d,%d)", numberOfTilesVertical, numberOfTilesHorizontal));
-            stopTimer();
             int oNoT = numberOfTiles;
             this.numberOfTilesVertical = numberOfTilesVertical;
             this.numberOfTilesHorizontal = numberOfTilesHorizontal;
             this.numberOfTiles = this.numberOfTilesHorizontal * this.numberOfTilesVertical;
             progressModel.setMaximum(numberOfTiles);
             firePropertyChange(PROPERTY_TILE_NUMBER, oNoT, numberOfTiles);
-            resetTimer();
+            reset();
         }
 
     }
@@ -276,14 +330,14 @@ class ImagePuzzleModel {
     }
 
     void stop() {
-        stopTimer();
+        stopRevealTimer();
     }
 
     public void start() {
         if (revealSequence.isEmpty()) {
             reset();
         }
-        startTimer();
+        startRevealTimer();
     }
 
     public int getNumberOfTilesHorizontal() {
@@ -306,7 +360,7 @@ class ImagePuzzleModel {
         return tileColor;
     }
 
-    private void setState(String state) {
+    private void setState(STATE state) {
         this.state = state;
         fireStateChange(state);
     }
@@ -318,4 +372,21 @@ class ImagePuzzleModel {
     List<Integer> getRevealSequence() {
         return Collections.unmodifiableList(revealSequence);
     }
+
+    public int getTeamLastBuzzed() {
+        return lastBuzzed;
+    }
+    
+    public String getTeamName(int id) {
+        return teams.get(id);
+    }
+
+    public void buzz(int id) {
+        if ((state == STATE.RUNNING || state == STATE.READY) && teams.containsKey(id)) {
+            System.out.println(String.format("party %s (#%d) has buzzed", teams.get(id), id));
+            lastBuzzed = id;
+            buzz();
+        }
+    }
+    
 }

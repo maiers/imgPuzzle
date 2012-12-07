@@ -8,17 +8,17 @@
 // permission from the respective owner.
 package de.comci.imgp.ui;
 
+import static de.comci.imgp.ui.ImageUtil.*;
 import java.awt.Dimension;
+import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.Rectangle;
-import javax.swing.SwingWorker;
-import static de.comci.imgp.ui.ImageUtil.*;
-import java.awt.Graphics;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.SwingWorker;
 
 /**
  *

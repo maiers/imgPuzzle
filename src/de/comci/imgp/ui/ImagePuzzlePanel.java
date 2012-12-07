@@ -4,17 +4,26 @@
  */
 package de.comci.imgp.ui;
 
+import de.comci.imgp.ui.ImagePuzzleModel.STATE;
 import static de.comci.imgp.ui.ImageUtil.*;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.FontMetrics;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.Image;
+import java.awt.RenderingHints;
+import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import javax.swing.SwingWorker;
+import javax.swing.Timer;
 
 /**
  *
@@ -28,6 +37,8 @@ public class ImagePuzzlePanel extends javax.swing.JPanel implements PropertyChan
         Color.RED,
         Color.BLACK
     };
+    private final int screenRes;
+    private Color countDownColor;
 
     public boolean isTransparent() {
         return showImage;
@@ -37,7 +48,7 @@ public class ImagePuzzlePanel extends javax.swing.JPanel implements PropertyChan
         if (this.showImage != transparent) {
             this.showImage = transparent;
             repaint();
-        }        
+        }
     }
 
     public ImagePuzzleModel getModel() {
@@ -54,8 +65,9 @@ public class ImagePuzzlePanel extends javax.swing.JPanel implements PropertyChan
     public ImagePuzzlePanel() {
         initComponents();
         model = new ImagePuzzleModel();
-        model.setNumberOfTiles(6, 6);
         setModel(model);
+        countDownColor = new Color(23,156,125, 180);
+        screenRes = Toolkit.getDefaultToolkit().getScreenResolution();
     }
 
     @Override
@@ -72,7 +84,7 @@ public class ImagePuzzlePanel extends javax.swing.JPanel implements PropertyChan
             // draw hiding tiles
             int r, c, x, y;
             int w = getWidth() / model.getNumberOfTilesHorizontal(),
-                h = getHeight() / model.getNumberOfTilesVertical();
+                    h = getHeight() / model.getNumberOfTilesVertical();
 
             while (w * model.getNumberOfTilesHorizontal() < getWidth()) {
                 w++;
@@ -90,10 +102,41 @@ public class ImagePuzzlePanel extends javax.swing.JPanel implements PropertyChan
                 //g.setColor((r % 2 + c % 2 - 1 == 0) ? colors[0] : colors[1]);
                 g.fillRect(x, y, w, h);
             }
+
+            // paint team names
+            if (teamName != null) {
+
+                Graphics2D g2 = (Graphics2D) g;
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+                        RenderingHints.VALUE_ANTIALIAS_ON);
+
+                int paddingX = 80, paddingY = 20;
+                w = getWidth();
+                h = getHeight();
+
+                int fontSize = (int) Math.round(w/8 * screenRes / 72.0);
+                Font font = new Font("Arial", Font.BOLD, fontSize);
+                FontMetrics metrics = g2.getFontMetrics(font);
+                
+                int strW = metrics.stringWidth(teamName);
+                g2.setFont(font);
+                x = (w - strW - paddingX) / 2;
+                y = (h - metrics.getHeight()) - 2 * paddingY;
+                
+                // draw rectangular background
+                g2.setColor(new Color(0, 0, 0, 120));
+                g2.fillRect(x, y, strW + paddingX, metrics.getHeight() + paddingY);
+                g2.setColor(getCountdownColor());
+                g2.fillRect(x, y, (int)((strW + paddingX) * (1 - buzzCountdown)), metrics.getHeight() + paddingY);
+                g2.setColor(Color.white);
+                g2.drawString(teamName, x + paddingX / 2, y + metrics.getAscent() + paddingY/2);
+
+            }
+
         }
 
     }
-    
+
     private Color getColor() {
         if (showImage) {
             return new Color(model.getTileColor().getRed(), model.getTileColor().getGreen(), model.getTileColor().getBlue(), 120);
@@ -169,33 +212,75 @@ public class ImagePuzzlePanel extends javax.swing.JPanel implements PropertyChan
 
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
-        
     }
+    private String teamName = null;
 
     @Override
-    public void stateChanged(String newState) {
+    public void stateChanged(STATE newState) {
 
         System.out.println("received " + newState + " state");
-        
+
         switch (newState) {
-            case ImagePuzzleModel.STATE_READY:
+            case READY:
+                stopBuzzCountdown();
+                teamName = null;
                 scaleImage(model.getRawImage());
                 break;
-            case ImagePuzzleModel.STATE_RUNNING:
+            case RUNNING:
+            case HALTED:
+            case REVEALED:
+                stopBuzzCountdown();
+                teamName = null;
                 repaint();
                 break;
-            case ImagePuzzleModel.STATE_HALTED:
-                repaint();
-                break;
-            case ImagePuzzleModel.STATE_REVEALED:
+            case BUZZED:
+                teamName = model.getTeamName(model.getTeamLastBuzzed());
+                startBuzzCountdown();
                 repaint();
                 break;
         }
 
     }
-    
+
     public void setImage(File image) {
         model.setImage(image);
+    }
+
+    Timer buzzCountdownTimer;
+    double buzzCountdown = 1.0;
+    int buzzCountdownDelay = 50;
+    
+    private void startBuzzCountdown() {
+        buzzCountdown = 1.0;
+        buzzCountdownTimer = new Timer(buzzCountdownDelay, new ActionListener() {
+
+            int fullCount = (int)Math.floor(model.getAnswerDuration() / buzzCountdownDelay) - 1;
+            double currentCount = 0;
+            
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                currentCount += buzzCountdownDelay; 
+                buzzCountdown = currentCount / fullCount / buzzCountdownDelay;
+                repaint();
+            }
+            
+        });
+        buzzCountdownTimer.setInitialDelay(0);
+        buzzCountdownTimer.start();
+    }
+
+    private void stopBuzzCountdown() {
+        if (buzzCountdownTimer != null) {
+            buzzCountdownTimer.stop();
+        }
+    }
+
+    private Color getCountdownColor() {
+        return countDownColor;
+    }
+
+    public void setCountDownColor(Color countDownColor) {
+        this.countDownColor = countDownColor;
     }
     
 }

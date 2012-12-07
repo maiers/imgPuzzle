@@ -25,26 +25,31 @@ public class ImagePuzzle {
             new File(System.getProperty("user.home") + "/Pictures"),
             new File(System.getProperty("user.home") + "/My Documents/My Pictures")
         };
-                
+        
+        File pictureDir = null;
         for (File f : possiblePictureDir) {
             if (f.exists()) {
                 System.out.println("found dir " + f.getAbsolutePath());
-                scanDirectory(f.toPath());
+                pictureDir = f;
+                this.scanDirectory(f.toPath());
                 break;
             }
         }
         
-        //scanDirectory(new File("D:/Image/2008/USA/Auswahl").toPath());
+        final File defaultPictureDir = pictureDir;
         
         java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                new ControlFrame(ImagePuzzle.this).setVisible(true);
+            @Override
+            public void run() {                
+                ControlFrame controlFrame = new ControlFrame(ImagePuzzle.this, defaultPictureDir);
+                controlFrame.setLocationRelativeTo(null);
+                controlFrame.setVisible(true);
             }
         });
 
     }
 
-    public void scanDirectory(Path dir) {
+    public final void scanDirectory(Path dir) {
 
         File[] listFiles = dir.toFile().listFiles(new FilenameFilter() {
             @Override
@@ -52,7 +57,6 @@ public class ImagePuzzle {
                 return name.toLowerCase().endsWith("jpg");
             }
         });
-
         files = Arrays.asList(listFiles);
     }
 

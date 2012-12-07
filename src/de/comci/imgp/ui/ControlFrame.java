@@ -5,10 +5,18 @@
 package de.comci.imgp.ui;
 
 import de.comci.imgp.ImagePuzzle;
+import de.comci.imgp.ui.ImagePuzzleModel.STATE;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
+import java.awt.KeyEventDispatcher;
+import java.awt.KeyboardFocusManager;
+import java.awt.Point;
 import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Hashtable;
@@ -18,9 +26,14 @@ import javax.swing.Action;
 import javax.swing.DefaultListModel;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComponent;
+import javax.swing.JFileChooser;
 import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JPanel;
 import javax.swing.JRadioButtonMenuItem;
+import javax.swing.ListCellRenderer;
 import javax.swing.ListModel;
+import javax.swing.SwingConstants;
 
 /**
  *
@@ -44,47 +57,103 @@ public class ControlFrame extends javax.swing.JFrame {
         }
     };
     private Action setFullScreenGraphicsDevice = new AbstractAction() {
-
         @Override
         public void actionPerformed(ActionEvent e) {
-            
+
             if (e.getSource() instanceof JCheckBoxMenuItem) {
-                JCheckBoxMenuItem check = (JCheckBoxMenuItem)e.getSource();
-                if (check.isSelected()) {
-                    String id = e.getActionCommand();
-                    for (GraphicsDevice d : getScreenDevices()) {
-                        if (d.getIDstring().equals(id)) {
-                            setFullScreenTarget(d);
-                            return;
-                        }
+                JCheckBoxMenuItem check = (JCheckBoxMenuItem) e.getSource();
+
+                String id = e.getActionCommand();
+                for (GraphicsDevice d : getScreenDevices()) {
+                    if (d.getIDstring().equals(id) && !d.equals(fullScreenTarget)) {
+                        setFullScreenTarget(d);
+                        return;
                     }
-                } else {
-                    setFullScreenTarget(null);
                 }
+
+                screenButtonGroup.clearSelection();
+                setFullScreenTarget(null);
+
             }
-            
+
         }
-        
     };
     private GraphicsDevice fullScreenTarget;
     private FullscreenFrame fs;
+    private final File defaultPictureDir;
+
+    public ControlFrame(ImagePuzzle aThis, File pictureDir) {
+        dc = aThis;
+        defaultPictureDir = pictureDir;
+        updateList();
+        initComponents();
+
+        KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(new KeyEventDispatcher() {
+            @Override
+            public boolean dispatchKeyEvent(KeyEvent evt) {
+
+                //System.out.println(String.format("key code %s at %d", evt.getKeyCode(), evt.getWhen()));        
+
+                switch (evt.getKeyCode()) {
+                    case 83:
+                    case 81:
+                    case 87:
+                    case 69:
+                    case 65:
+                    case 68:
+                    case 89:
+                    case 88:
+                    case 67:
+                        partyBuzzed(0);
+                        break;
+                    case 46:
+                    case 44:
+                    case 77:
+                    case 76:
+                    case 75:
+                    case 74:
+                    case 79:
+                    case 73:
+                    case 85:
+                        partyBuzzed(1);
+                        break;
+                }
+
+
+                return false;
+            }
+        });
+
+    }
+
+    private void partyBuzzed(int id) {
+        imagePuzzlePanel1.getModel().buzz(id);
+    }
 
     public GraphicsDevice getFullScreenTarget() {
         return fullScreenTarget;
     }
 
     public void setFullScreenTarget(GraphicsDevice newTargetDevice) {
-        
+
+        System.out.println("setFullScreenTarget");
+
         if (this.fullScreenTarget != newTargetDevice) {
-            
-            if (this.fullScreenTarget != null) {
+
+            if (fs != null) {
                 // remove
                 fs.setVisible(false);
-                this.fullScreenTarget.setFullScreenWindow(null);                
+                fs.dispose();
+                if (fullScreenTarget != null) {
+                    fullScreenTarget.setFullScreenWindow(null);
+                }
+                fullScreenTarget = null;
             }
-            
-            this.fullScreenTarget = newTargetDevice;
+
+
             if (newTargetDevice != null) {
+                // set new target
+                this.fullScreenTarget = newTargetDevice;
                 fs = new FullscreenFrame();
                 fs.setImagePuzzleModel(imagePuzzlePanel1.getModel());
                 fs.setSize(newTargetDevice.getDisplayMode().getWidth(), newTargetDevice.getDisplayMode().getHeight());
@@ -95,30 +164,39 @@ public class ControlFrame extends javax.swing.JFrame {
                     newTargetDevice.setFullScreenWindow(null);
                 }
             }
-            
-        }
-        
-    }
 
-    /**
-     * Creates new form ControlFrame
-     */
-    public ControlFrame(ImagePuzzle aThis) {
-        dc = aThis;
-        updateList();
-        initComponents();
+        }
+
     }
 
     private List<GraphicsDevice> getScreenDevices() {
-        
         GraphicsEnvironment g = GraphicsEnvironment.getLocalGraphicsEnvironment();
         List<GraphicsDevice> devices = Arrays.asList(g.getScreenDevices());
-
-        for (GraphicsDevice d : devices) {
-            System.out.println(String.format("%s [%d:%d]", d.getIDstring(), d.getDisplayMode().getWidth(), d.getDisplayMode().getHeight()));
-        }
-        
         return devices;
+    }
+
+    private ListCellRenderer<File> getFileListCellRenderer() {
+
+        return new ListCellRenderer<File>() {
+            JPanel panel = new JPanel();
+            JLabel text = new JLabel("", SwingConstants.LEFT);
+            Color selectionColor = new Color(200, 200, 200);
+
+            {
+                panel.add(text, BorderLayout.CENTER);
+            }
+
+            @Override
+            public Component getListCellRendererComponent(JList<? extends File> list, File value, int index, boolean isSelected, boolean cellHasFocus) {
+
+                text.setText(value.getName());
+                Color color = (isSelected) ? selectionColor : Color.white;
+                //color = (cellHasFocus) ? focusColor : color;
+                panel.setBackground(color);
+                return panel;
+
+            }
+        };
 
     }
 
@@ -142,14 +220,16 @@ public class ControlFrame extends javax.swing.JFrame {
         jPanel1 = new javax.swing.JPanel();
         imagePuzzlePanel1 = new de.comci.imgp.ui.ImagePuzzlePanel();
         imagePuzzlePanel1.setTransparent(true);
-        jPanel3 = new javax.swing.JPanel();
+
+        imagePuzzlePanel1.getModel().addStateChangeListener(getButtonControlByModelState());
+        controlPanel = new javax.swing.JPanel();
         sliderSpeed = new javax.swing.JSlider();
         labelSlider = new javax.swing.JLabel();
         buttonRevealImage = new javax.swing.JButton();
         progressBarPictureVisible = new javax.swing.JProgressBar();
         buttonNextImage = new javax.swing.JButton();
-        jButton1 = new javax.swing.JButton();
-        jButton2 = new javax.swing.JButton();
+        buttonStart = new javax.swing.JButton();
+        butonStop = new javax.swing.JButton();
         mainMenuBar = new javax.swing.JMenuBar();
         fileMenu = new javax.swing.JMenu();
         buttonFiles = new javax.swing.JMenuItem();
@@ -178,6 +258,8 @@ public class ControlFrame extends javax.swing.JFrame {
         );
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setMinimumSize(new java.awt.Dimension(800, 600));
+        setPreferredSize(new java.awt.Dimension(800, 600));
         addWindowListener(new java.awt.event.WindowAdapter() {
             public void windowClosed(java.awt.event.WindowEvent evt) {
                 formWindowClosed(evt);
@@ -190,6 +272,7 @@ public class ControlFrame extends javax.swing.JFrame {
 
         imageFileList.setModel(getListModel());
         imageFileList.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
+        imageFileList.setCellRenderer(getFileListCellRenderer());
         imageFileList.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
             public void valueChanged(javax.swing.event.ListSelectionEvent evt) {
                 imageFileListValueChanged(evt);
@@ -228,6 +311,7 @@ public class ControlFrame extends javax.swing.JFrame {
         sliderSpeed.setPaintLabels(true);
         sliderSpeed.setPaintTicks(true);
         sliderSpeed.setSnapToTicks(true);
+        sliderSpeed.setEnabled(false);
         sliderSpeed.setInverted(true);
         sliderSpeed.setModel(imagePuzzlePanel1.getModel().getSpeedModel());
         Hashtable<Integer,JComponent> labelTable = new Hashtable<>();
@@ -239,6 +323,7 @@ public class ControlFrame extends javax.swing.JFrame {
         labelSlider.setText("Speed");
 
         buttonRevealImage.setText("Reveal");
+        buttonRevealImage.setEnabled(false);
         buttonRevealImage.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 buttonRevealImageActionPerformed(evt);
@@ -248,39 +333,42 @@ public class ControlFrame extends javax.swing.JFrame {
         progressBarPictureVisible.setModel(imagePuzzlePanel1.getModel().getProgressModel());
 
         buttonNextImage.setText("Next");
+        buttonNextImage.setEnabled(false);
         buttonNextImage.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 buttonNextImageActionPerformed(evt);
             }
         });
 
-        jButton1.setText("Start");
-        jButton1.addActionListener(new java.awt.event.ActionListener() {
+        buttonStart.setText("Start");
+        buttonStart.setEnabled(false);
+        buttonStart.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton1ActionPerformed(evt);
+                buttonStartActionPerformed(evt);
             }
         });
 
-        jButton2.setText("Stop");
-        jButton2.addActionListener(new java.awt.event.ActionListener() {
+        butonStop.setText("Stop");
+        butonStop.setEnabled(false);
+        butonStop.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton2ActionPerformed(evt);
+                butonStopActionPerformed(evt);
             }
         });
 
-        javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
-        jPanel3.setLayout(jPanel3Layout);
-        jPanel3Layout.setHorizontalGroup(
-            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel3Layout.createSequentialGroup()
+        javax.swing.GroupLayout controlPanelLayout = new javax.swing.GroupLayout(controlPanel);
+        controlPanel.setLayout(controlPanelLayout);
+        controlPanelLayout.setHorizontalGroup(
+            controlPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(controlPanelLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 95, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGroup(controlPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(buttonStart, javax.swing.GroupLayout.PREFERRED_SIZE, 95, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(labelSlider, javax.swing.GroupLayout.PREFERRED_SIZE, 61, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel3Layout.createSequentialGroup()
-                        .addComponent(jButton2)
+                .addGroup(controlPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(controlPanelLayout.createSequentialGroup()
+                        .addComponent(butonStop)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(buttonRevealImage, javax.swing.GroupLayout.PREFERRED_SIZE, 95, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -290,19 +378,19 @@ public class ControlFrame extends javax.swing.JFrame {
                         .addContainerGap())
                     .addComponent(sliderSpeed, javax.swing.GroupLayout.DEFAULT_SIZE, 461, Short.MAX_VALUE)))
         );
-        jPanel3Layout.setVerticalGroup(
-            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel3Layout.createSequentialGroup()
+        controlPanelLayout.setVerticalGroup(
+            controlPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(controlPanelLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                .addGroup(controlPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
                     .addComponent(progressBarPictureVisible, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(buttonNextImage, javax.swing.GroupLayout.DEFAULT_SIZE, 33, Short.MAX_VALUE)
-                    .addComponent(jButton1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(buttonStart, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(buttonRevealImage, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jButton2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(butonStop, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel3Layout.createSequentialGroup()
+                .addGroup(controlPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(controlPanelLayout.createSequentialGroup()
                         .addComponent(labelSlider, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(0, 8, Short.MAX_VALUE))
                     .addComponent(sliderSpeed, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
@@ -312,7 +400,7 @@ public class ControlFrame extends javax.swing.JFrame {
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel3, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(controlPanel, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(imagePuzzlePanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -324,7 +412,7 @@ public class ControlFrame extends javax.swing.JFrame {
                 .addContainerGap()
                 .addComponent(imagePuzzlePanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addComponent(controlPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
 
         splitPaneMain.setRightComponent(jPanel1);
@@ -354,7 +442,7 @@ public class ControlFrame extends javax.swing.JFrame {
         settingsMenu.setText("Settings");
 
         tileMenu.setText("Tiles");
-        for (int i = 3; i < 7; i++) {
+        for (int i = 3; i < 10; i++) {
             for (int j = 0; j < 2; j++) {
                 JRadioButtonMenuItem btn = new JRadioButtonMenuItem(setTileCount);
                 tileButtonGroup.add(btn);
@@ -403,56 +491,66 @@ public class ControlFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_buttonExitActionPerformed
 
     private void buttonFilesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonFilesActionPerformed
+        directoryChooser.setCurrentDirectory(defaultPictureDir);
         selectDirectoryDialog.setMinimumSize(new Dimension(600, 500));
+        Point pos = this.getLocation();
+        pos.translate(20, 20);
+        selectDirectoryDialog.setLocation(pos);
         selectDirectoryDialog.setVisible(true);
     }//GEN-LAST:event_buttonFilesActionPerformed
 
     private void directoryChooserActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_directoryChooserActionPerformed
-        dc.scanDirectory(directoryChooser.getSelectedFile().toPath());
-        selectDirectoryDialog.setVisible(false);
-        updateList();
+        System.out.println(evt.getActionCommand());
+        if (evt.getActionCommand().equals(JFileChooser.CANCEL_SELECTION)) {
+            selectDirectoryDialog.setVisible(false);
+        } else {
+            if (directoryChooser.getSelectedFile() != null) {
+                dc.scanDirectory(directoryChooser.getSelectedFile().toPath());
+                selectDirectoryDialog.setVisible(false);
+                updateList();
+            }
+        }
     }//GEN-LAST:event_directoryChooserActionPerformed
 
     private void formWindowClosed(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosed
         System.exit(0);
     }//GEN-LAST:event_formWindowClosed
 
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+    private void buttonStartActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonStartActionPerformed
         imagePuzzlePanel1.getModel().start();
-    }//GEN-LAST:event_jButton1ActionPerformed
+    }//GEN-LAST:event_buttonStartActionPerformed
 
-    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
+    private void butonStopActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_butonStopActionPerformed
         imagePuzzlePanel1.getModel().stop();
-    }//GEN-LAST:event_jButton2ActionPerformed
+    }//GEN-LAST:event_butonStopActionPerformed
 
     private void buttonRevealImageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonRevealImageActionPerformed
         imagePuzzlePanel1.getModel().reveal();
     }//GEN-LAST:event_buttonRevealImageActionPerformed
 
     private void imageFileListValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_imageFileListValueChanged
-        imagePuzzlePanel1.getModel().setImage((File)imageFileList.getSelectedValue());
+        imagePuzzlePanel1.getModel().setImage((File) imageFileList.getSelectedValue());
     }//GEN-LAST:event_imageFileListValueChanged
 
     private void buttonNextImageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonNextImageActionPerformed
         int i = imageFileList.getSelectedIndex();
         if (i + 1 < imageFileList.getModel().getSize());
-        imageFileList.setSelectedIndex(i+1);
+        imageFileList.setSelectedIndex(i + 1);
     }//GEN-LAST:event_buttonNextImageActionPerformed
-
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton butonStop;
     private javax.swing.JMenuItem buttonExit;
     private javax.swing.JMenuItem buttonFiles;
     private javax.swing.JButton buttonNextImage;
     private javax.swing.JButton buttonRevealImage;
+    private javax.swing.JButton buttonStart;
+    private javax.swing.JPanel controlPanel;
     private javax.swing.JFileChooser directoryChooser;
     private javax.swing.JMenu fileMenu;
     private javax.swing.JList imageFileList;
     private de.comci.imgp.ui.ImagePuzzlePanel imagePuzzlePanel1;
-    private javax.swing.JButton jButton1;
-    private javax.swing.JButton jButton2;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
-    private javax.swing.JPanel jPanel3;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JLabel labelSlider;
     private javax.swing.JMenuBar mainMenuBar;
@@ -481,4 +579,62 @@ public class ControlFrame extends javax.swing.JFrame {
     public ListModel<File> getListModel() {
         return files;
     }
+
+    private StateChangeListener getButtonControlByModelState() {
+
+        return new StateChangeListener() {
+            
+            @Override
+            public void stateChanged(STATE newState) {
+
+                switch (newState) {
+                    case UNINITIALIZED:
+                        buttonStart.setEnabled(false);
+                        butonStop.setEnabled(false);
+                        buttonRevealImage.setEnabled(false);
+                        buttonNextImage.setEnabled(false);
+                        sliderSpeed.setEnabled(false);
+                        break;
+                    case READY:
+                        buttonStart.setEnabled(true);
+                        butonStop.setEnabled(false);
+                        buttonRevealImage.setEnabled(false);
+                        buttonNextImage.setEnabled(true);
+                        sliderSpeed.setEnabled(true);
+                        break;
+                    case RUNNING:
+                        buttonStart.setEnabled(false);
+                        butonStop.setEnabled(true);
+                        buttonRevealImage.setEnabled(true);
+                        buttonNextImage.setEnabled(true);
+                        sliderSpeed.setEnabled(true);
+                        break;
+                    case HALTED:
+                        buttonStart.setEnabled(true);
+                        butonStop.setEnabled(false);
+                        buttonRevealImage.setEnabled(true);
+                        buttonNextImage.setEnabled(true);
+                        sliderSpeed.setEnabled(true);
+                        break;
+                    case BUZZED:
+                        buttonStart.setEnabled(false);
+                        butonStop.setEnabled(false);
+                        buttonRevealImage.setEnabled(true);
+                        buttonNextImage.setEnabled(false);
+                        sliderSpeed.setEnabled(false);
+                        break;
+                    case REVEALED:
+                        buttonStart.setEnabled(true);
+                        butonStop.setEnabled(false);
+                        buttonRevealImage.setEnabled(false);
+                        buttonNextImage.setEnabled(true);
+                        sliderSpeed.setEnabled(true);
+                        break;
+                }
+
+            }
+        };
+
+    }
+    
 }

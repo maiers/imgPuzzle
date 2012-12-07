@@ -4,12 +4,14 @@
  */
 package de.comci.imgp.ui;
 
+import de.comci.imgp.ui.ImagePuzzleModel.STATE;
+
 /**
  *
  * @author Sebastian
  */
 interface StateChangeListener {
     
-    public void stateChanged(String newState);
-    
+    public void stateChanged(STATE newState);
+        
 }
