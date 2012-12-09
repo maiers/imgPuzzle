@@ -4,7 +4,6 @@
  */
 package de.comci.imgp.ui;
 
-import de.comci.imgp.ui.ImagePuzzleModel.STATE;
 import static de.comci.imgp.ui.ImageUtil.*;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -13,10 +12,16 @@ import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
+import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
@@ -33,10 +38,6 @@ public class ImagePuzzlePanel extends javax.swing.JPanel implements PropertyChan
 
     private ImagePuzzleModel model;
     private boolean showImage = false;
-    private Color[] colors = {
-        Color.RED,
-        Color.BLACK
-    };
     private final int screenRes;
     private Color countDownColor;
 
@@ -61,13 +62,60 @@ public class ImagePuzzlePanel extends javax.swing.JPanel implements PropertyChan
         model.addStateChangeListener(this);
     }
     private Image scaledImage;
+    private int tileWidth, tileHeight;
 
     public ImagePuzzlePanel() {
         initComponents();
         model = new ImagePuzzleModel();
         setModel(model);
-        countDownColor = new Color(23,156,125, 180);
+        countDownColor = new Color(23, 156, 125, 180);
         screenRes = Toolkit.getDefaultToolkit().getScreenResolution();
+        addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getButton() == MouseEvent.BUTTON1) {
+                    System.out.println(String.format("left mouse at %d:%d, that's tile #%d", e.getX(), e.getY(), getTileNumber(e.getPoint())));
+                    model.toggleDelayedTile(getTileNumber(e.getPoint()));
+                    repaint();
+                }
+
+            }
+        });
+        addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                updateTileSize();
+            }
+        });
+        updateTileSize();
+    }
+
+    private void updateTileSize() {
+        tileWidth = getWidth() / model.getNumberOfTilesHorizontal();
+        tileHeight = getHeight() / model.getNumberOfTilesVertical();
+        while (tileWidth * model.getNumberOfTilesHorizontal() < getWidth()) {
+            tileWidth++;
+        }
+        while (tileHeight * model.getNumberOfTilesVertical() < getHeight()) {
+            tileHeight++;
+        }
+    }
+
+    private int getTileNumber(Point location) {
+        int column = (int) Math.floor(location.x / tileWidth);
+        int row = (int) Math.floor(location.y / tileHeight);
+        return row * getModel().getNumberOfTilesHorizontal() + column;
+    }
+
+    private Rectangle getTileBounds(int tileNumber) {
+        Rectangle rectangle = new Rectangle();
+        int row = (int) Math.floor(tileNumber / model.getNumberOfTilesHorizontal());
+        int column = tileNumber % model.getNumberOfTilesHorizontal();
+        rectangle.x = column * tileWidth;
+        rectangle.y = row * tileHeight;
+        rectangle.width = tileWidth;
+        rectangle.height = tileHeight;
+        return rectangle;
     }
 
     @Override
@@ -82,25 +130,19 @@ public class ImagePuzzlePanel extends javax.swing.JPanel implements PropertyChan
         if (seq != null) {
 
             // draw hiding tiles
-            int r, c, x, y;
-            int w = getWidth() / model.getNumberOfTilesHorizontal(),
-                    h = getHeight() / model.getNumberOfTilesVertical();
-
-            while (w * model.getNumberOfTilesHorizontal() < getWidth()) {
-                w++;
-            }
-            while (h * model.getNumberOfTilesVertical() < getHeight()) {
-                h++;
-            }
-
             g.setColor(getColor());
             for (int tile : seq) {
-                r = (int) Math.floor(tile / model.getNumberOfTilesHorizontal());
-                c = tile % model.getNumberOfTilesHorizontal();
-                x = c * w;
-                y = r * h;
-                //g.setColor((r % 2 + c % 2 - 1 == 0) ? colors[0] : colors[1]);
-                g.fillRect(x, y, w, h);
+                Rectangle r = getTileBounds(tile);
+                g.fillRect(r.x, r.y, r.width, r.height);
+                if (model.isDelayedTile(tile)) {
+                    Graphics2D g2 = (Graphics2D) g.create(r.x, r.y, r.width, r.height);
+                    g2.rotate(-.5);
+                    g2.setColor(Color.RED);
+                    int dist = 9;
+                    for (int i = -3; i < Math.floor(1.0 * r.width / dist); i++) {
+                        g2.drawLine(i*dist, 0, i*dist, r.height *2);
+                    }
+                }
             }
 
             // paint team names
@@ -111,25 +153,25 @@ public class ImagePuzzlePanel extends javax.swing.JPanel implements PropertyChan
                         RenderingHints.VALUE_ANTIALIAS_ON);
 
                 int paddingX = 80, paddingY = 20;
-                w = getWidth();
-                h = getHeight();
+                int w = getWidth(),
+                        h = getHeight();
 
-                int fontSize = (int) Math.round(w/8 * screenRes / 72.0);
+                int fontSize = (int) Math.round(w / 8 * screenRes / 72.0);
                 Font font = new Font("Arial", Font.BOLD, fontSize);
                 FontMetrics metrics = g2.getFontMetrics(font);
-                
+
                 int strW = metrics.stringWidth(teamName);
                 g2.setFont(font);
-                x = (w - strW - paddingX) / 2;
-                y = (h - metrics.getHeight()) - 2 * paddingY;
-                
+                int x = (w - strW - paddingX) / 2,
+                        y = (h - metrics.getHeight()) - 2 * paddingY;
+
                 // draw rectangular background
                 g2.setColor(new Color(0, 0, 0, 120));
                 g2.fillRect(x, y, strW + paddingX, metrics.getHeight() + paddingY);
                 g2.setColor(getCountdownColor());
-                g2.fillRect(x, y, (int)((strW + paddingX) * (1 - buzzCountdown)), metrics.getHeight() + paddingY);
+                g2.fillRect(x, y, (int) ((strW + paddingX) * (1 - buzzCountdown)), metrics.getHeight() + paddingY);
                 g2.setColor(Color.white);
-                g2.drawString(teamName, x + paddingX / 2, y + metrics.getAscent() + paddingY/2);
+                g2.drawString(teamName, x + paddingX / 2, y + metrics.getAscent() + paddingY / 2);
 
             }
 
@@ -212,15 +254,20 @@ public class ImagePuzzlePanel extends javax.swing.JPanel implements PropertyChan
 
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
+
+        if (evt.getPropertyName().equals(ImagePuzzleModel.PROPERTY_TILE_NUMBER)) {
+            updateTileSize();
+        }
+
     }
     private String teamName = null;
 
     @Override
-    public void stateChanged(STATE newState) {
+    public void stateChanged(StateChangeEvent evt) {
 
-        System.out.println("received " + newState + " state");
+        System.out.println("received " + evt.getNewState() + " state");
 
-        switch (newState) {
+        switch (evt.getNewState()) {
             case READY:
                 stopBuzzCountdown();
                 teamName = null;
@@ -245,25 +292,22 @@ public class ImagePuzzlePanel extends javax.swing.JPanel implements PropertyChan
     public void setImage(File image) {
         model.setImage(image);
     }
-
     Timer buzzCountdownTimer;
     double buzzCountdown = 1.0;
     int buzzCountdownDelay = 50;
-    
+
     private void startBuzzCountdown() {
         buzzCountdown = 1.0;
         buzzCountdownTimer = new Timer(buzzCountdownDelay, new ActionListener() {
-
-            int fullCount = (int)Math.floor(model.getAnswerDuration() / buzzCountdownDelay) - 1;
+            int fullCount = (int) Math.floor(model.getAnswerDuration() / buzzCountdownDelay) - 1;
             double currentCount = 0;
-            
+
             @Override
             public void actionPerformed(ActionEvent e) {
-                currentCount += buzzCountdownDelay; 
+                currentCount += buzzCountdownDelay;
                 buzzCountdown = currentCount / fullCount / buzzCountdownDelay;
                 repaint();
             }
-            
         });
         buzzCountdownTimer.setInitialDelay(0);
         buzzCountdownTimer.start();

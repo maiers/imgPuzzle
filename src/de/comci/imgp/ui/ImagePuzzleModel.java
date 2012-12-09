@@ -17,6 +17,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -28,74 +29,162 @@ import javax.swing.SwingWorker;
 import javax.swing.Timer;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import jdbm.PrimaryHashMap;
+import jdbm.RecordManager;
+import jdbm.RecordManagerFactory;
 
 /**
  *
  * @author Sebastian
  */
-final class ImagePuzzleModel {
+public final class ImagePuzzleModel {
+
     private int lastBuzzed;
     private Timer buzzTimer;
-    private int answerDuration = 3000;
+    private int answerDuration = 5000;
+    private GameMode gameMode = GameMode.SINGLE_TRY;
+
+    private void executeBuzz() {
+
+        buzzTimer = new Timer(1000, new AbstractAction() {
+            private GameState initialState = state;
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                setState(initialState);
+                if (initialState == GameState.RUNNING) {
+                    setState(GameState.HALTED);
+                    switch (gameMode) {
+                        case SINGLE_TRY:
+                        case NORMAL:
+                        default:
+                            ImagePuzzleModel.this.start();
+                            break;
+                    }
+
+                }
+            }
+        });
+
+        stopRevealTimer();
+        setState(GameState.BUZZED);
+
+        buzzTimer.setInitialDelay(answerDuration);
+        buzzTimer.setRepeats(false);
+        buzzTimer.start();
+    }
+
+    public enum GameMode {
+
+        SINGLE_TRY, NORMAL
+    }
+
+    public GameMode getGameMode() {
+        return gameMode;
+    }
 
     /**
-     * Amount of time (in milliseconds) a team has to answer 
+     * mode how to play the game
+     *
+     * @param gameMode
+     */
+    public void setGameMode(GameMode gameMode) {
+        this.gameMode = gameMode;
+    }
+
+    /**
+     * Amount of time (in milliseconds) a team has to answer
      */
     public int getAnswerDuration() {
         return answerDuration;
     }
 
     public void setAnswerDuration(int answerDuration) {
+        System.out.println(String.format("Set answer duration to %.1f s", answerDuration/1000.0));
         this.answerDuration = answerDuration;
     }
 
-    private void buzz() {
-        
-        if (state != STATE.RUNNING && state != STATE.READY) {
-            System.err.println("buzz can only be called in ready|running state");
+    public Set<Integer> getTeamIds() {
+        return teams.keySet();
+    }
+    private List<Integer> delayedTiles;
+
+    public void toggleDelayedTile(Integer tileNumber) {
+
+        if (state != GameState.READY) {
+            // not allowed in all states besides READY
             return;
         }
-        
-        buzzTimer = new Timer(1000, new AbstractAction() {
 
-            private STATE initialState = state;
-            
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                setState(initialState);
-                if (initialState == STATE.RUNNING) {
-                    setState(STATE.HALTED);
-                    ImagePuzzleModel.this.start();
+        if (tileNumber >= 0 && tileNumber <= numberOfTiles) {
+            if (delayedTiles.contains(tileNumber)) {
+                try {
+                    delayedTiles.remove(tileNumber);
+                } catch (IndexOutOfBoundsException ex) {
+                    // ignore
                 }
+            } else {
+                delayedTiles.add(tileNumber);
             }
-            
-        });        
-        
-        stopRevealTimer();
-        setState(STATE.BUZZED);
-        
-        buzzTimer.setInitialDelay(answerDuration);
-        buzzTimer.setRepeats(false);
-        buzzTimer.start();
-        
+            initRevealSequence();
+            saveDelayedTiles();
+        }
+
     }
 
-    public enum STATE {
+    public void clearPersitentDelayedTiles() {
+    }
+
+    private RecordManager getRecordManager() throws IOException {
+        return RecordManagerFactory.createRecordManager("delayedTiles");
+    }
+
+    private List<Integer> getRecord(final String recordName, final int tileCount) {
+        try {
+            RecordManager manager = getRecordManager();
+            List<Integer> get = manager.<Integer, List<Integer>>hashMap(recordName).get(tileCount);
+            manager.close();
+            if (get == null) {
+                get = new LinkedList<>();
+            }
+            return get;
+        } catch (IOException ex) {
+            Logger.getLogger(ImagePuzzleModel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return new LinkedList<>();
+    }
+
+    private void loadDelayedTiles() {
+        delayedTiles = getRecord(imgFile.getAbsolutePath(), numberOfTiles);
+    }
+
+    private void saveDelayedTiles() {
+        try {
+            RecordManager manager = getRecordManager();
+            PrimaryHashMap<Integer, List<Integer>> delayedTilesStorage = manager.<Integer, List<Integer>>hashMap(imgFile.getAbsolutePath());
+            delayedTilesStorage.put(numberOfTiles, delayedTiles);
+            manager.commit();
+            manager.close();
+        } catch (IOException ex) {
+            Logger.getLogger(ImagePuzzleModel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    public enum GameState {
+
         RUNNING, HALTED, READY, REVEALED, UNINITIALIZED, BUZZED
     }
-    
     public static final String PROPERTY_NUMBER_OF_REVEALED_TILES = "PROPERTY_NUMBER_OF_REVEALED_TILES";
     public static final String PROPERTY_TILE_NUMBER = "PROPERTY_TILE_NUMBER";
     public static final String PROPERTY_SPEED = "PROPERTY_SPEED";
     public static final String PROPERTY_TILE_COLOR = "PROPERTY_TILE_COLOR";
     public static final String PROPERTY_IMAGE = "PROPERTY_IMAGE";
-    
     private BoundedRangeModel progressModel;
     private int numberOfTilesVertical = 8;
     private File imgFile;
     private Color tileColor = new Color(25, 25, 25);
     private Timer revealTimer;
-    private int numberOfTiles = 8*7;
+    private int numberOfTiles = 8 * 7;
     private Image rawImage;
     private int numberOfTilesHorizontal = 7;
     private List<PropertyChangeListener> propertyListener;
@@ -111,7 +200,8 @@ final class ImagePuzzleModel {
         propertyListener = new LinkedList<>();
         stateListener = new LinkedList<>();
         revealSequence = new LinkedList<>();
-        state = STATE.UNINITIALIZED;
+        delayedTiles = new LinkedList<>();
+        state = GameState.UNINITIALIZED;
         teams = new HashMap<>();
         teams.put(0, "Team 1");
         teams.put(1, "Team 2");
@@ -123,10 +213,6 @@ final class ImagePuzzleModel {
                 setSpeed(speedModel.getValue());
             }
         });
-    }
-
-    public void addTeam(int id, String name) {
-        teams.put(id, name);
     }
 
     public void addPropertyChangeListener(PropertyChangeListener listener) {
@@ -144,16 +230,17 @@ final class ImagePuzzleModel {
         }
     }
 
-    private void fireStateChange(STATE newState) {
+    private void fireStateChange(GameState newState) {
+        StateChangeEvent evt = new StateChangeEvent(this, newState);
         for (StateChangeListener l : stateListener) {
-            l.stateChanged(newState);
+            l.stateChanged(evt);
         }
     }
-    private STATE state;
+    private GameState state;
 
     private void startRevealTimer() {
 
-        if (state == STATE.READY) {
+        if (state == GameState.READY) {
 
             revealTimer = new Timer(getSpeedAsDelay(), new ActionListener() {
                 @Override
@@ -163,14 +250,14 @@ final class ImagePuzzleModel {
                 }
             });
             revealTimer.start();
-            setState(STATE.RUNNING);
+            setState(GameState.RUNNING);
 
-        } else if (state == STATE.HALTED || state == STATE.REVEALED) {
+        } else if (state == GameState.HALTED || state == GameState.REVEALED) {
 
             // assume timer exists
             revealTimer.setInitialDelay(0);
             revealTimer.start();
-            setState(STATE.RUNNING);
+            setState(GameState.RUNNING);
 
         } else {
             // ignore others
@@ -180,10 +267,10 @@ final class ImagePuzzleModel {
 
     private void stopRevealTimer() {
 
-        if (state == STATE.RUNNING) {
+        if (state == GameState.RUNNING) {
 
             revealTimer.stop();
-            setState(STATE.HALTED);
+            setState(GameState.HALTED);
 
         }
 
@@ -191,10 +278,10 @@ final class ImagePuzzleModel {
 
     private void resetTimer() {
 
-        if (state == STATE.HALTED) {
+        if (state == GameState.HALTED) {
 
             revealTimer = null;
-            setState(STATE.READY);
+            setState(GameState.READY);
 
         }
 
@@ -208,8 +295,9 @@ final class ImagePuzzleModel {
 
         if (imgFile != null && this.imgFile != imgFile && imgFile.exists() && imgFile.isFile() && imgFile.getName().toLowerCase().endsWith("jpg")) {
 
-            stopRevealTimer();
-            resetTimer();
+            stop();
+            setState(GameState.UNINITIALIZED);
+            reset();
 
             this.imgFile = imgFile;
 
@@ -232,8 +320,9 @@ final class ImagePuzzleModel {
                     try {
                         System.out.println("Image loaded from file.");
                         rawImage = get();
+                        loadDelayedTiles();
                         initRevealSequence();
-                        setState(STATE.READY);
+                        setState(GameState.READY);
                     } catch (InterruptedException | ExecutionException ex) {
                         Logger.getLogger(ImagePuzzlePanel.class.getName()).log(Level.SEVERE, null, ex);
                     }
@@ -246,7 +335,7 @@ final class ImagePuzzleModel {
         progressModel.setValue(progressModel.getMaximum());
         revealSequence.clear();
         stopRevealTimer();
-        setState(STATE.REVEALED);
+        setState(GameState.REVEALED);
     }
 
     public int getSpeedAsDelay() {
@@ -264,7 +353,7 @@ final class ImagePuzzleModel {
             if (revealSequence.isEmpty()) {
                 stopRevealTimer();
             } else {
-                fireStateChange(STATE.RUNNING);
+                fireStateChange(GameState.RUNNING);
             }
         }
 
@@ -314,17 +403,29 @@ final class ImagePuzzleModel {
     }
 
     public void reset() {
+        delayedTiles.clear();
         stop();
         initRevealSequence();
         resetTimer();
     }
 
+    public boolean isDelayedTile(int tileNumber) {
+        return delayedTiles.contains(tileNumber);
+    }
+
     private void initRevealSequence() {
         revealSequence = new LinkedList<>();
         for (int i = 0; i < numberOfTiles; i++) {
-            revealSequence.add(i);
+            // ignore delayed tile numbers
+            if (!delayedTiles.contains(i)) {
+                revealSequence.add(i);
+            }
         }
         Collections.shuffle(revealSequence);
+        // add delayed tile numbers
+        List<Integer> delayedCopy = new LinkedList<>(delayedTiles);
+        Collections.shuffle(delayedCopy);
+        revealSequence.addAll(delayedCopy);
         progressModel.setValue(0);
         System.out.println(String.format("Receal Sequence initialized with %d steps", revealSequence.size()));
     }
@@ -360,7 +461,7 @@ final class ImagePuzzleModel {
         return tileColor;
     }
 
-    private void setState(STATE state) {
+    private void setState(GameState state) {
         this.state = state;
         fireStateChange(state);
     }
@@ -376,17 +477,26 @@ final class ImagePuzzleModel {
     public int getTeamLastBuzzed() {
         return lastBuzzed;
     }
-    
+
     public String getTeamName(int id) {
         return teams.get(id);
     }
 
+    /**
+     * Buzz for one team
+     *
+     * @param id
+     */
     public void buzz(int id) {
-        if ((state == STATE.RUNNING || state == STATE.READY) && teams.containsKey(id)) {
-            System.out.println(String.format("party %s (#%d) has buzzed", teams.get(id), id));
-            lastBuzzed = id;
-            buzz();
+
+        if ((state != GameState.RUNNING && state != GameState.READY) || !teams.containsKey(id)) {
+            System.err.println("buzz can only be called in ready|running state, and team must exist");
+            return;
         }
+
+        System.out.println(String.format("party %s (#%d) has buzzed", teams.get(id), id));
+        lastBuzzed = id;
+        executeBuzz();
+
     }
-    
 }

@@ -5,7 +5,6 @@
 package de.comci.imgp.ui;
 
 import de.comci.imgp.ImagePuzzle;
-import de.comci.imgp.ui.ImagePuzzleModel.STATE;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -56,6 +55,15 @@ public class ControlFrame extends javax.swing.JFrame {
 
         }
     };
+    private Action setAnswerDuration = new AbstractAction() {
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            String cmd = e.getActionCommand();
+            imagePuzzlePanel1.getModel().setAnswerDuration(Integer.parseInt(cmd));
+        }
+        
+    };
     private Action setFullScreenGraphicsDevice = new AbstractAction() {
         @Override
         public void actionPerformed(ActionEvent e) {
@@ -87,13 +95,20 @@ public class ControlFrame extends javax.swing.JFrame {
         defaultPictureDir = pictureDir;
         updateList();
         initComponents();
+        
+        ImagePuzzleSounds soundsOnKlick = new ImagePuzzleSounds(imagePuzzlePanel1.getModel());
+        imagePuzzlePanel1.getModel().addStateChangeListener(soundsOnKlick);
 
         KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(new KeyEventDispatcher() {
+            
             @Override
             public boolean dispatchKeyEvent(KeyEvent evt) {
 
-                //System.out.println(String.format("key code %s at %d", evt.getKeyCode(), evt.getWhen()));        
-
+                // only key pressed events
+                if (evt.getID() != KeyEvent.KEY_PRESSED) {
+                    return false;
+                }
+                
                 switch (evt.getKeyCode()) {
                     case 83:
                     case 81:
@@ -118,7 +133,6 @@ public class ControlFrame extends javax.swing.JFrame {
                         partyBuzzed(1);
                         break;
                 }
-
 
                 return false;
             }
@@ -213,6 +227,14 @@ public class ControlFrame extends javax.swing.JFrame {
         directoryChooser = new javax.swing.JFileChooser();
         tileButtonGroup = new javax.swing.ButtonGroup();
         screenButtonGroup = new javax.swing.ButtonGroup();
+        aboutDialog = new javax.swing.JDialog();
+        jScrollPane2 = new javax.swing.JScrollPane();
+        jTextPane1 = new javax.swing.JTextPane();
+        tileColorChooserDialog = new javax.swing.JDialog();
+        tileColorChooser = new javax.swing.JColorChooser();
+        colorChooserOkBUtton = new javax.swing.JButton();
+        colorChooserAbortButton = new javax.swing.JButton();
+        answerDurationButtonGroup = new javax.swing.ButtonGroup();
         splitPaneMain = new javax.swing.JSplitPane();
         jPanel2 = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
@@ -235,9 +257,11 @@ public class ControlFrame extends javax.swing.JFrame {
         buttonFiles = new javax.swing.JMenuItem();
         buttonExit = new javax.swing.JMenuItem();
         settingsMenu = new javax.swing.JMenu();
-        tileMenu = new javax.swing.JMenu();
         screenMenu = new javax.swing.JMenu();
-        menuAbout = new javax.swing.JMenu();
+        tileMenu = new javax.swing.JMenu();
+        durationMenu = new javax.swing.JMenu();
+        helpMenu = new javax.swing.JMenu();
+        aboutMenuItem = new javax.swing.JMenuItem();
 
         directoryChooser.setFileSelectionMode(javax.swing.JFileChooser.DIRECTORIES_ONLY);
         directoryChooser.addActionListener(new java.awt.event.ActionListener() {
@@ -257,9 +281,72 @@ public class ControlFrame extends javax.swing.JFrame {
             .addComponent(directoryChooser, javax.swing.GroupLayout.DEFAULT_SIZE, 419, Short.MAX_VALUE)
         );
 
+        aboutDialog.setTitle("About");
+        aboutDialog.setAlwaysOnTop(true);
+        aboutDialog.setLocationByPlatform(true);
+        aboutDialog.setMinimumSize(new java.awt.Dimension(500, 350));
+        aboutDialog.setModal(true);
+        aboutDialog.setModalExclusionType(null);
+        aboutDialog.setName("aboutDialog"); // NOI18N
+        aboutDialog.setResizable(false);
+
+        jTextPane1.setEditable(false);
+        jTextPane1.setText("ImagePuzzle: A simple puzzle game.\nCopyright (C) 2012  Sebastian Maier\n\nThis program is free software: you can redistribute it and/or modify\nit under the terms of the GNU General Public License as published by\nthe Free Software Foundation, either version 3 of the License, or\n(at your option) any later version.\n\nThis program is distributed in the hope that it will be useful,\nbut WITHOUT ANY WARRANTY; without even the implied warranty of\nMERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\nGNU General Public License for more details.\n\nYou should have received a copy of the GNU General Public License\nalong with this program.  If not, see <http://www.gnu.org/licenses/>.\n\nUses Sound Effects from: http://www.pacdv.com/sounds/index.html\n\nLibraries:\nhttp://code.google.com/p/jdbm2/"); // NOI18N
+        jScrollPane2.setViewportView(jTextPane1);
+
+        javax.swing.GroupLayout aboutDialogLayout = new javax.swing.GroupLayout(aboutDialog.getContentPane());
+        aboutDialog.getContentPane().setLayout(aboutDialogLayout);
+        aboutDialogLayout.setHorizontalGroup(
+            aboutDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(aboutDialogLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 390, Short.MAX_VALUE)
+                .addContainerGap())
+        );
+        aboutDialogLayout.setVerticalGroup(
+            aboutDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(aboutDialogLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 278, Short.MAX_VALUE)
+                .addContainerGap())
+        );
+
+        tileColorChooserDialog.setModal(true);
+        tileColorChooserDialog.setResizable(false);
+
+        colorChooserOkBUtton.setText("Ok");
+
+        colorChooserAbortButton.setText("Cancel");
+
+        javax.swing.GroupLayout tileColorChooserDialogLayout = new javax.swing.GroupLayout(tileColorChooserDialog.getContentPane());
+        tileColorChooserDialog.getContentPane().setLayout(tileColorChooserDialogLayout);
+        tileColorChooserDialogLayout.setHorizontalGroup(
+            tileColorChooserDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(tileColorChooserDialogLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(tileColorChooserDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, tileColorChooserDialogLayout.createSequentialGroup()
+                        .addGap(0, 0, Short.MAX_VALUE)
+                        .addComponent(colorChooserOkBUtton)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(colorChooserAbortButton))
+                    .addComponent(tileColorChooser, javax.swing.GroupLayout.DEFAULT_SIZE, 631, Short.MAX_VALUE))
+                .addContainerGap())
+        );
+        tileColorChooserDialogLayout.setVerticalGroup(
+            tileColorChooserDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, tileColorChooserDialogLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(tileColorChooser, javax.swing.GroupLayout.DEFAULT_SIZE, 394, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(tileColorChooserDialogLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(colorChooserAbortButton)
+                    .addComponent(colorChooserOkBUtton))
+                .addContainerGap())
+        );
+
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setMinimumSize(new java.awt.Dimension(800, 600));
-        setPreferredSize(new java.awt.Dimension(800, 600));
         addWindowListener(new java.awt.event.WindowAdapter() {
             public void windowClosed(java.awt.event.WindowEvent evt) {
                 formWindowClosed(evt);
@@ -288,7 +375,7 @@ public class ControlFrame extends javax.swing.JFrame {
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 525, Short.MAX_VALUE)
+            .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 577, Short.MAX_VALUE)
         );
 
         splitPaneMain.setLeftComponent(jPanel2);
@@ -297,11 +384,11 @@ public class ControlFrame extends javax.swing.JFrame {
         imagePuzzlePanel1.setLayout(imagePuzzlePanel1Layout);
         imagePuzzlePanel1Layout.setHorizontalGroup(
             imagePuzzlePanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 552, Short.MAX_VALUE)
+            .addGap(0, 574, Short.MAX_VALUE)
         );
         imagePuzzlePanel1Layout.setVerticalGroup(
             imagePuzzlePanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 405, Short.MAX_VALUE)
+            .addGap(0, 457, Short.MAX_VALUE)
         );
 
         sliderSpeed.setMajorTickSpacing(1);
@@ -376,7 +463,7 @@ public class ControlFrame extends javax.swing.JFrame {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(buttonNextImage, javax.swing.GroupLayout.PREFERRED_SIZE, 94, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addContainerGap())
-                    .addComponent(sliderSpeed, javax.swing.GroupLayout.DEFAULT_SIZE, 461, Short.MAX_VALUE)))
+                    .addComponent(sliderSpeed, javax.swing.GroupLayout.DEFAULT_SIZE, 483, Short.MAX_VALUE)))
         );
         controlPanelLayout.setVerticalGroup(
             controlPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -417,8 +504,10 @@ public class ControlFrame extends javax.swing.JFrame {
 
         splitPaneMain.setRightComponent(jPanel1);
 
+        fileMenu.setMnemonic('f');
         fileMenu.setText("File");
 
+        buttonFiles.setMnemonic('d');
         buttonFiles.setText("Open directory");
         buttonFiles.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -439,9 +528,23 @@ public class ControlFrame extends javax.swing.JFrame {
 
         mainMenuBar.add(fileMenu);
 
+        settingsMenu.setMnemonic('s');
         settingsMenu.setText("Settings");
 
-        tileMenu.setText("Tiles");
+        screenMenu.setMnemonic('f');
+        screenMenu.setText("Fullscreen");
+        for (GraphicsDevice d : getScreenDevices()) {
+            JCheckBoxMenuItem btn = new JCheckBoxMenuItem(setFullScreenGraphicsDevice);
+            screenButtonGroup.add(btn);
+            btn.setText(String.format("%s [%d:%d]", d.getIDstring(), d.getDisplayMode().getWidth(), d.getDisplayMode().getHeight()));
+            btn.setActionCommand(d.getIDstring());
+            btn.setSelected(d.getIDstring().equals(getFullScreenTarget()));
+            screenMenu.add(btn);
+        }
+        settingsMenu.add(screenMenu);
+
+        tileMenu.setMnemonic('n');
+        tileMenu.setText("Number of Tiles");
         for (int i = 3; i < 10; i++) {
             for (int j = 0; j < 2; j++) {
                 JRadioButtonMenuItem btn = new JRadioButtonMenuItem(setTileCount);
@@ -454,21 +557,34 @@ public class ControlFrame extends javax.swing.JFrame {
         }
         settingsMenu.add(tileMenu);
 
-        screenMenu.setText("Output");
-        for (GraphicsDevice d : getScreenDevices()) {
-            JCheckBoxMenuItem btn = new JCheckBoxMenuItem(setFullScreenGraphicsDevice);
-            screenButtonGroup.add(btn);
-            btn.setText(String.format("%s [%d:%d]", d.getIDstring(), d.getDisplayMode().getWidth(), d.getDisplayMode().getHeight()));
-            btn.setActionCommand(d.getIDstring());
-            btn.setSelected(d.getIDstring().equals(getFullScreenTarget()));
-            screenMenu.add(btn);
+        durationMenu.setMnemonic('a');
+        durationMenu.setText("Answer duration");
+        for (int i = 1; i <= 10; i++) {
+            JRadioButtonMenuItem btn = new JRadioButtonMenuItem(setAnswerDuration);
+            answerDurationButtonGroup.add(btn);
+            btn.setText(String.format("%d seconds", i));
+            btn.setActionCommand("" + i*1000);
+            btn.setSelected(imagePuzzlePanel1.getModel().getAnswerDuration() == i * 1000);
+            durationMenu.add(btn);
         }
-        settingsMenu.add(screenMenu);
+        settingsMenu.add(durationMenu);
 
         mainMenuBar.add(settingsMenu);
 
-        menuAbout.setText("About");
-        mainMenuBar.add(menuAbout);
+        helpMenu.setMnemonic('?');
+        helpMenu.setText("?");
+        helpMenu.setName(""); // NOI18N
+
+        aboutMenuItem.setMnemonic('a');
+        aboutMenuItem.setText("About");
+        aboutMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                aboutMenuItemActionPerformed(evt);
+            }
+        });
+        helpMenu.add(aboutMenuItem);
+
+        mainMenuBar.add(helpMenu);
 
         setJMenuBar(mainMenuBar);
 
@@ -537,24 +653,40 @@ public class ControlFrame extends javax.swing.JFrame {
         if (i + 1 < imageFileList.getModel().getSize());
         imageFileList.setSelectedIndex(i + 1);
     }//GEN-LAST:event_buttonNextImageActionPerformed
+
+    private void aboutMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_aboutMenuItemActionPerformed
+        Point p = getLocation();
+        p.translate(50, 50);
+        aboutDialog.setLocation(p);
+        aboutDialog.setVisible(true);
+    }//GEN-LAST:event_aboutMenuItemActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JDialog aboutDialog;
+    private javax.swing.JMenuItem aboutMenuItem;
+    private javax.swing.ButtonGroup answerDurationButtonGroup;
     private javax.swing.JButton butonStop;
     private javax.swing.JMenuItem buttonExit;
     private javax.swing.JMenuItem buttonFiles;
     private javax.swing.JButton buttonNextImage;
     private javax.swing.JButton buttonRevealImage;
     private javax.swing.JButton buttonStart;
+    private javax.swing.JButton colorChooserAbortButton;
+    private javax.swing.JButton colorChooserOkBUtton;
     private javax.swing.JPanel controlPanel;
     private javax.swing.JFileChooser directoryChooser;
+    private javax.swing.JMenu durationMenu;
     private javax.swing.JMenu fileMenu;
+    private javax.swing.JMenu helpMenu;
     private javax.swing.JList imageFileList;
     private de.comci.imgp.ui.ImagePuzzlePanel imagePuzzlePanel1;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JTextPane jTextPane1;
     private javax.swing.JLabel labelSlider;
     private javax.swing.JMenuBar mainMenuBar;
-    private javax.swing.JMenu menuAbout;
     private javax.swing.JProgressBar progressBarPictureVisible;
     private javax.swing.ButtonGroup screenButtonGroup;
     private javax.swing.JMenu screenMenu;
@@ -563,6 +695,8 @@ public class ControlFrame extends javax.swing.JFrame {
     private javax.swing.JSlider sliderSpeed;
     private javax.swing.JSplitPane splitPaneMain;
     private javax.swing.ButtonGroup tileButtonGroup;
+    private javax.swing.JColorChooser tileColorChooser;
+    private javax.swing.JDialog tileColorChooserDialog;
     private javax.swing.JMenu tileMenu;
     // End of variables declaration//GEN-END:variables
 
@@ -585,9 +719,9 @@ public class ControlFrame extends javax.swing.JFrame {
         return new StateChangeListener() {
             
             @Override
-            public void stateChanged(STATE newState) {
+            public void stateChanged(StateChangeEvent evt) {
 
-                switch (newState) {
+                switch (evt.getNewState()) {
                     case UNINITIALIZED:
                         buttonStart.setEnabled(false);
                         butonStop.setEnabled(false);
