@@ -141,6 +141,25 @@
     </Container>
     <Component class="javax.swing.ButtonGroup" name="answerDurationButtonGroup">
     </Component>
+    <Container class="javax.swing.JPopupMenu" name="fileListPopupMenu">
+
+      <Layout class="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout">
+        <Property name="useNullLayout" type="boolean" value="true"/>
+      </Layout>
+      <SubComponents>
+        <MenuItem class="javax.swing.JMenuItem" name="shuffleListMenuItem">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="Shuffle list"/>
+            <Property name="actionCommand" type="java.lang.String" value="shuffle"/>
+          </Properties>
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="shuffleListMenuItemActionPerformed"/>
+          </Events>
+        </MenuItem>
+      </SubComponents>
+    </Container>
+    <Component class="javax.swing.ButtonGroup" name="punishmentGroup">
+    </Component>
     <Menu class="javax.swing.JMenuBar" name="mainMenuBar">
       <SubComponents>
         <Menu class="javax.swing.JMenu" name="fileMenu">
@@ -203,6 +222,15 @@
                 <AuxValue name="JavaCodeGenerator_LayoutCodePre" type="java.lang.String" value="        for (int i = 1; i &lt;= 10; i++) {&#xd;&#xa;            JRadioButtonMenuItem btn = new JRadioButtonMenuItem(setAnswerDuration);&#xd;&#xa;            answerDurationButtonGroup.add(btn);&#xd;&#xa;            btn.setText(String.format(&quot;%d seconds&quot;, i));&#xd;&#xa;            btn.setActionCommand(&quot;&quot; + i*1000);&#xd;&#xa;            btn.setSelected(imagePuzzlePanel1.getModel().getAnswerDuration() == i * 1000);&#xd;&#xa;            durationMenu.add(btn);&#xd;&#xa;        }"/>
               </AuxValues>
             </Menu>
+            <Menu class="javax.swing.JMenu" name="punishmentMenu">
+              <Properties>
+                <Property name="mnemonic" type="int" value="116"/>
+                <Property name="text" type="java.lang.String" value="Duration blocked after wrong answer"/>
+              </Properties>
+              <AuxValues>
+                <AuxValue name="JavaCodeGenerator_LayoutCodePre" type="java.lang.String" value="        for (int i = 0; i &lt;= 10; i++) {&#xd;&#xa;            JRadioButtonMenuItem btn = new JRadioButtonMenuItem(setBlockingDuration);&#xd;&#xa;            punishmentGroup.add(btn);&#xd;&#xa;            btn.setText(String.format(&quot;%d tiles&quot;, i));&#xd;&#xa;            btn.setActionCommand(&quot;&quot; + i);&#xd;&#xa;            btn.setSelected(imagePuzzlePanel1.getModel().getDurationBlocked() == i);&#xd;&#xa;            punishmentMenu.add(btn);&#xd;&#xa;        }"/>
+              </AuxValues>
+            </Menu>
           </SubComponents>
         </Menu>
         <Menu class="javax.swing.JMenu" name="helpMenu">
@@ -254,7 +282,7 @@
   <Layout>
     <DimensionLayout dim="0">
       <Group type="103" groupAlignment="0" attributes="0">
-          <Component id="splitPaneMain" alignment="0" max="32767" attributes="0"/>
+          <Component id="splitPaneMain" alignment="0" pref="800" max="32767" attributes="0"/>
       </Group>
     </DimensionLayout>
     <DimensionLayout dim="1">
@@ -291,7 +319,7 @@
             </DimensionLayout>
             <DimensionLayout dim="1">
               <Group type="103" groupAlignment="0" attributes="0">
-                  <Component id="jScrollPane1" alignment="1" pref="577" max="32767" attributes="0"/>
+                  <Component id="jScrollPane1" alignment="1" pref="591" max="32767" attributes="0"/>
               </Group>
             </DimensionLayout>
           </Layout>
@@ -314,6 +342,7 @@
                     </Property>
                   </Properties>
                   <Events>
+                    <EventHandler event="mouseReleased" listener="java.awt.event.MouseListener" parameters="java.awt.event.MouseEvent" handler="imageFileListMouseReleased"/>
                     <EventHandler event="valueChanged" listener="javax.swing.event.ListSelectionListener" parameters="javax.swing.event.ListSelectionEvent" handler="imageFileListValueChanged"/>
                   </Events>
                 </Component>
@@ -343,9 +372,9 @@
               <Group type="103" groupAlignment="0" attributes="0">
                   <Group type="102" alignment="0" attributes="0">
                       <EmptySpace max="-2" attributes="0"/>
-                      <Component id="imagePuzzlePanel1" max="32767" attributes="0"/>
+                      <Component id="imagePuzzlePanel1" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
-                      <Component id="controlPanel" max="-2" attributes="0"/>
+                      <Component id="controlPanel" max="32767" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>
@@ -364,7 +393,7 @@
                 </DimensionLayout>
                 <DimensionLayout dim="1">
                   <Group type="103" groupAlignment="0" attributes="0">
-                      <EmptySpace min="0" pref="457" max="32767" attributes="0"/>
+                      <EmptySpace min="0" pref="408" max="32767" attributes="0"/>
                   </Group>
                 </DimensionLayout>
               </Layout>
@@ -378,7 +407,7 @@
                           <EmptySpace max="-2" attributes="0"/>
                           <Group type="103" groupAlignment="0" attributes="0">
                               <Component id="buttonStart" min="-2" pref="95" max="-2" attributes="0"/>
-                              <Component id="labelSlider" min="-2" pref="61" max="-2" attributes="0"/>
+                              <Component id="labelSlider" max="32767" attributes="0"/>
                           </Group>
                           <EmptySpace max="-2" attributes="0"/>
                           <Group type="103" groupAlignment="0" attributes="0">
@@ -392,7 +421,7 @@
                                   <Component id="buttonNextImage" min="-2" pref="94" max="-2" attributes="0"/>
                                   <EmptySpace max="-2" attributes="0"/>
                               </Group>
-                              <Component id="sliderSpeed" pref="483" max="32767" attributes="0"/>
+                              <Component id="sliderSpeed" pref="484" max="32767" attributes="0"/>
                           </Group>
                       </Group>
                   </Group>
@@ -401,21 +430,19 @@
                   <Group type="103" groupAlignment="0" attributes="0">
                       <Group type="102" alignment="0" attributes="0">
                           <EmptySpace max="-2" attributes="0"/>
-                          <Group type="103" groupAlignment="1" max="-2" attributes="0">
+                          <Group type="103" groupAlignment="1" attributes="0">
                               <Component id="progressBarPictureVisible" max="32767" attributes="0"/>
-                              <Component id="buttonNextImage" pref="33" max="32767" attributes="0"/>
-                              <Component id="buttonStart" alignment="1" max="32767" attributes="0"/>
+                              <Component id="buttonNextImage" pref="84" max="32767" attributes="0"/>
                               <Component id="buttonRevealImage" alignment="1" max="32767" attributes="0"/>
                               <Component id="butonStop" alignment="1" max="32767" attributes="0"/>
+                              <Component id="buttonStart" alignment="0" max="32767" attributes="0"/>
                           </Group>
                           <EmptySpace max="-2" attributes="0"/>
                           <Group type="103" groupAlignment="0" attributes="0">
-                              <Group type="102" attributes="0">
-                                  <Component id="labelSlider" min="-2" pref="45" max="-2" attributes="0"/>
-                                  <EmptySpace min="0" pref="8" max="32767" attributes="0"/>
-                              </Group>
-                              <Component id="sliderSpeed" max="32767" attributes="0"/>
+                              <Component id="sliderSpeed" alignment="1" min="-2" pref="54" max="-2" attributes="0"/>
+                              <Component id="labelSlider" alignment="1" min="-2" pref="45" max="-2" attributes="0"/>
                           </Group>
+                          <EmptySpace max="-2" attributes="0"/>
                       </Group>
                   </Group>
                 </DimensionLayout>

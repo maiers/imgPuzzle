@@ -14,6 +14,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -41,8 +42,8 @@ public final class ImagePuzzleModel {
 
     private int lastBuzzed;
     private Timer buzzTimer;
-    private int answerDuration = 5000;
-    private GameMode gameMode = GameMode.SINGLE_TRY;
+    private int answerDuration = 9000;
+    private GameMode gameMode = GameMode.PUNISHMENT;
 
     private void executeBuzz() {
 
@@ -51,18 +52,23 @@ public final class ImagePuzzleModel {
 
             @Override
             public void actionPerformed(ActionEvent e) {
-                setState(initialState);
-                if (initialState == GameState.RUNNING) {
-                    setState(GameState.HALTED);
-                    switch (gameMode) {
-                        case SINGLE_TRY:
-                        case NORMAL:
-                        default:
-                            ImagePuzzleModel.this.start();
-                            break;
-                    }
 
+                if (initialState == GameState.RUNNING) {
+                    if (state != GameState.REVEALED) {
+                        switch (gameMode) {
+                            case PUNISHMENT:
+                                blockTeamBuzz(lastBuzzed);
+                            case NORMAL:
+                            default:
+                                setState(GameState.HALTED);
+                                ImagePuzzleModel.this.start();
+                                break;
+                        }
+                    }
+                } else {
+                    setState(initialState);
                 }
+
             }
         });
 
@@ -73,10 +79,24 @@ public final class ImagePuzzleModel {
         buzzTimer.setRepeats(false);
         buzzTimer.start();
     }
+    private final Map<Integer, Integer> blockedTeams;
+    private int durationBlocked = 3;
+
+    public int getDurationBlocked() {
+        return durationBlocked;
+    }
+
+    public void setDurationBlocked(int durationBlocked) {
+        this.durationBlocked = durationBlocked;
+    }
+
+    private synchronized void blockTeamBuzz(int teamId) {
+        blockedTeams.put(teamId, revealSequence.size());
+    }
 
     public enum GameMode {
 
-        SINGLE_TRY, NORMAL
+        PUNISHMENT, NORMAL
     }
 
     public GameMode getGameMode() {
@@ -100,7 +120,7 @@ public final class ImagePuzzleModel {
     }
 
     public void setAnswerDuration(int answerDuration) {
-        System.out.println(String.format("Set answer duration to %.1f s", answerDuration/1000.0));
+        System.out.println(String.format("Set answer duration to %.1f s", answerDuration / 1000.0));
         this.answerDuration = answerDuration;
     }
 
@@ -205,8 +225,9 @@ public final class ImagePuzzleModel {
         teams = new HashMap<>();
         teams.put(0, "Team 1");
         teams.put(1, "Team 2");
+        blockedTeams = new HashMap<>();
         progressModel = new DefaultBoundedRangeModel(0, 0, 0, numberOfTiles);
-        speedModel = new DefaultBoundedRangeModel(8, 0, 1, 10);
+        speedModel = new DefaultBoundedRangeModel(10, 0, 1, 12);
         speedModel.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(ChangeEvent e) {
@@ -240,7 +261,7 @@ public final class ImagePuzzleModel {
 
     private void startRevealTimer() {
 
-        if (state == GameState.READY) {
+        if (state == GameState.READY || state == GameState.REVEALED) {
 
             revealTimer = new Timer(getSpeedAsDelay(), new ActionListener() {
                 @Override
@@ -252,7 +273,7 @@ public final class ImagePuzzleModel {
             revealTimer.start();
             setState(GameState.RUNNING);
 
-        } else if (state == GameState.HALTED || state == GameState.REVEALED) {
+        } else if (state == GameState.HALTED) {
 
             // assume timer exists
             revealTimer.setInitialDelay(0);
@@ -341,20 +362,37 @@ public final class ImagePuzzleModel {
     public int getSpeedAsDelay() {
         return speedModel.getValue() * 200;
     }
+    
     private List<Integer> revealSequence;
+    
+    public synchronized int getNumberOfBlockedTilesForTeam(int teamId) {
+        if (!blockedTeams.containsKey(teamId)) {
+            return 0;
+        }
+        return durationBlocked - (blockedTeams.get(teamId) - revealSequence.size()) + 1;
+    }
 
-    void revealNext() {
+    synchronized void revealNext() {
 
         if (!revealSequence.isEmpty()) {
             int r = revealSequence.remove(0);
             progressModel.setValue(numberOfTiles - revealSequence.size());
             System.out.println(String.format("revealed item %d", r));
 
+            // count down on team block timer
+            for (Iterator<Integer> i = blockedTeams.values().iterator(); i.hasNext(); ) {
+                if (i.next() - durationBlocked > revealSequence.size()) {
+                    // remove block information if down to zero
+                    i.remove();
+                }
+            }
+
             if (revealSequence.isEmpty()) {
                 stopRevealTimer();
             } else {
                 fireStateChange(GameState.RUNNING);
             }
+
         }
 
     }
@@ -487,10 +525,10 @@ public final class ImagePuzzleModel {
      *
      * @param id
      */
-    public void buzz(int id) {
+    public synchronized void buzz(int id) {
 
-        if ((state != GameState.RUNNING && state != GameState.READY) || !teams.containsKey(id)) {
-            System.err.println("buzz can only be called in ready|running state, and team must exist");
+        if ((state != GameState.RUNNING && state != GameState.READY) || !teams.containsKey(id) || blockedTeams.containsKey(id)) {
+            System.err.println("buzz can only be called in ready|running state, and team must exist and should not be blocked.");
             return;
         }
 
@@ -499,4 +537,5 @@ public final class ImagePuzzleModel {
         executeBuzz();
 
     }
+    
 }

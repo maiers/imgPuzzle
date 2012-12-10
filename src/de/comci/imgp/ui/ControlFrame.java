@@ -18,6 +18,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.io.File;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Hashtable;
 import java.util.List;
 import javax.swing.AbstractAction;
@@ -63,6 +64,14 @@ public class ControlFrame extends javax.swing.JFrame {
             imagePuzzlePanel1.getModel().setAnswerDuration(Integer.parseInt(cmd));
         }
         
+    };
+    private Action setBlockingDuration = new AbstractAction() {
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            String cmd = e.getActionCommand();
+            imagePuzzlePanel1.getModel().setDurationBlocked(Integer.parseInt(cmd));
+        }
     };
     private Action setFullScreenGraphicsDevice = new AbstractAction() {
         @Override
@@ -235,6 +244,9 @@ public class ControlFrame extends javax.swing.JFrame {
         colorChooserOkBUtton = new javax.swing.JButton();
         colorChooserAbortButton = new javax.swing.JButton();
         answerDurationButtonGroup = new javax.swing.ButtonGroup();
+        fileListPopupMenu = new javax.swing.JPopupMenu();
+        shuffleListMenuItem = new javax.swing.JMenuItem();
+        punishmentGroup = new javax.swing.ButtonGroup();
         splitPaneMain = new javax.swing.JSplitPane();
         jPanel2 = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
@@ -260,6 +272,7 @@ public class ControlFrame extends javax.swing.JFrame {
         screenMenu = new javax.swing.JMenu();
         tileMenu = new javax.swing.JMenu();
         durationMenu = new javax.swing.JMenu();
+        punishmentMenu = new javax.swing.JMenu();
         helpMenu = new javax.swing.JMenu();
         aboutMenuItem = new javax.swing.JMenuItem();
 
@@ -345,6 +358,15 @@ public class ControlFrame extends javax.swing.JFrame {
                 .addContainerGap())
         );
 
+        shuffleListMenuItem.setText("Shuffle list");
+        shuffleListMenuItem.setActionCommand("shuffle");
+        shuffleListMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                shuffleListMenuItemActionPerformed(evt);
+            }
+        });
+        fileListPopupMenu.add(shuffleListMenuItem);
+
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setMinimumSize(new java.awt.Dimension(800, 600));
         addWindowListener(new java.awt.event.WindowAdapter() {
@@ -360,6 +382,11 @@ public class ControlFrame extends javax.swing.JFrame {
         imageFileList.setModel(getListModel());
         imageFileList.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
         imageFileList.setCellRenderer(getFileListCellRenderer());
+        imageFileList.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseReleased(java.awt.event.MouseEvent evt) {
+                imageFileListMouseReleased(evt);
+            }
+        });
         imageFileList.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
             public void valueChanged(javax.swing.event.ListSelectionEvent evt) {
                 imageFileListValueChanged(evt);
@@ -375,7 +402,7 @@ public class ControlFrame extends javax.swing.JFrame {
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 577, Short.MAX_VALUE)
+            .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 591, Short.MAX_VALUE)
         );
 
         splitPaneMain.setLeftComponent(jPanel2);
@@ -388,7 +415,7 @@ public class ControlFrame extends javax.swing.JFrame {
         );
         imagePuzzlePanel1Layout.setVerticalGroup(
             imagePuzzlePanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 457, Short.MAX_VALUE)
+            .addGap(0, 408, Short.MAX_VALUE)
         );
 
         sliderSpeed.setMajorTickSpacing(1);
@@ -451,7 +478,7 @@ public class ControlFrame extends javax.swing.JFrame {
                 .addContainerGap()
                 .addGroup(controlPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(buttonStart, javax.swing.GroupLayout.PREFERRED_SIZE, 95, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(labelSlider, javax.swing.GroupLayout.PREFERRED_SIZE, 61, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(labelSlider, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(controlPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(controlPanelLayout.createSequentialGroup()
@@ -463,24 +490,23 @@ public class ControlFrame extends javax.swing.JFrame {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(buttonNextImage, javax.swing.GroupLayout.PREFERRED_SIZE, 94, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addContainerGap())
-                    .addComponent(sliderSpeed, javax.swing.GroupLayout.DEFAULT_SIZE, 483, Short.MAX_VALUE)))
+                    .addComponent(sliderSpeed, javax.swing.GroupLayout.DEFAULT_SIZE, 484, Short.MAX_VALUE)))
         );
         controlPanelLayout.setVerticalGroup(
             controlPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(controlPanelLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(controlPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                .addGroup(controlPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(progressBarPictureVisible, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(buttonNextImage, javax.swing.GroupLayout.DEFAULT_SIZE, 33, Short.MAX_VALUE)
-                    .addComponent(buttonStart, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(buttonNextImage, javax.swing.GroupLayout.DEFAULT_SIZE, 84, Short.MAX_VALUE)
                     .addComponent(buttonRevealImage, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(butonStop, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(butonStop, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(buttonStart, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(controlPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(controlPanelLayout.createSequentialGroup()
-                        .addComponent(labelSlider, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(0, 8, Short.MAX_VALUE))
-                    .addComponent(sliderSpeed, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                    .addComponent(sliderSpeed, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 54, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(labelSlider, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap())
         );
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
@@ -497,9 +523,9 @@ public class ControlFrame extends javax.swing.JFrame {
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(imagePuzzlePanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(imagePuzzlePanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(controlPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addComponent(controlPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         splitPaneMain.setRightComponent(jPanel1);
@@ -569,6 +595,18 @@ public class ControlFrame extends javax.swing.JFrame {
         }
         settingsMenu.add(durationMenu);
 
+        punishmentMenu.setMnemonic('t');
+        punishmentMenu.setText("Duration blocked after wrong answer");
+        for (int i = 0; i <= 10; i++) {
+            JRadioButtonMenuItem btn = new JRadioButtonMenuItem(setBlockingDuration);
+            punishmentGroup.add(btn);
+            btn.setText(String.format("%d tiles", i));
+            btn.setActionCommand("" + i);
+            btn.setSelected(imagePuzzlePanel1.getModel().getDurationBlocked() == i);
+            punishmentMenu.add(btn);
+        }
+        settingsMenu.add(punishmentMenu);
+
         mainMenuBar.add(settingsMenu);
 
         helpMenu.setMnemonic('?');
@@ -592,7 +630,7 @@ public class ControlFrame extends javax.swing.JFrame {
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(splitPaneMain)
+            .addComponent(splitPaneMain, javax.swing.GroupLayout.DEFAULT_SIZE, 800, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -661,6 +699,18 @@ public class ControlFrame extends javax.swing.JFrame {
         aboutDialog.setVisible(true);
     }//GEN-LAST:event_aboutMenuItemActionPerformed
 
+    private void imageFileListMouseReleased(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_imageFileListMouseReleased
+        if (evt.isPopupTrigger()) {
+            fileListPopupMenu.setLocation(evt.getLocationOnScreen());
+            fileListPopupMenu.setVisible(true);
+        }
+    }//GEN-LAST:event_imageFileListMouseReleased
+
+    private void shuffleListMenuItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_shuffleListMenuItemActionPerformed
+        shuffleList();
+        fileListPopupMenu.setVisible(false);
+    }//GEN-LAST:event_shuffleListMenuItemActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JDialog aboutDialog;
     private javax.swing.JMenuItem aboutMenuItem;
@@ -676,6 +726,7 @@ public class ControlFrame extends javax.swing.JFrame {
     private javax.swing.JPanel controlPanel;
     private javax.swing.JFileChooser directoryChooser;
     private javax.swing.JMenu durationMenu;
+    private javax.swing.JPopupMenu fileListPopupMenu;
     private javax.swing.JMenu fileMenu;
     private javax.swing.JMenu helpMenu;
     private javax.swing.JList imageFileList;
@@ -688,10 +739,13 @@ public class ControlFrame extends javax.swing.JFrame {
     private javax.swing.JLabel labelSlider;
     private javax.swing.JMenuBar mainMenuBar;
     private javax.swing.JProgressBar progressBarPictureVisible;
+    private javax.swing.ButtonGroup punishmentGroup;
+    private javax.swing.JMenu punishmentMenu;
     private javax.swing.ButtonGroup screenButtonGroup;
     private javax.swing.JMenu screenMenu;
     private javax.swing.JDialog selectDirectoryDialog;
     private javax.swing.JMenu settingsMenu;
+    private javax.swing.JMenuItem shuffleListMenuItem;
     private javax.swing.JSlider sliderSpeed;
     private javax.swing.JSplitPane splitPaneMain;
     private javax.swing.ButtonGroup tileButtonGroup;
@@ -708,6 +762,19 @@ public class ControlFrame extends javax.swing.JFrame {
             files.addElement(f);
         }
 
+    }
+    
+    private void shuffleList() {
+        
+        files.clear();
+        
+        List<File> srcFiles = dc.getFiles();
+        Collections.shuffle(srcFiles);
+                
+        for (File f : srcFiles) {
+            files.addElement(f);
+        }
+        
     }
 
     public ListModel<File> getListModel() {

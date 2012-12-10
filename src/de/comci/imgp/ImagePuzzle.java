@@ -69,7 +69,7 @@ public class ImagePuzzle {
 
     }
 
-    public Iterable<File> getFiles() {
+    public List<File> getFiles() {
         return files;
     }
    

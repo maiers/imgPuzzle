@@ -5,6 +5,7 @@
 package de.comci.imgp.ui;
 
 import static de.comci.imgp.ui.ImageUtil.*;
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -15,6 +16,8 @@ import java.awt.Image;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
+import java.awt.Shape;
+import java.awt.Stroke;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -40,6 +43,8 @@ public class ImagePuzzlePanel extends javax.swing.JPanel implements PropertyChan
     private boolean showImage = false;
     private final int screenRes;
     private Color countDownColor;
+    final private Color transparentColor = new Color(0, 0, 0, 120);
+    private final Color countdownColor = new Color(235, 106, 1, 100);
 
     public boolean isTransparent() {
         return showImage;
@@ -129,44 +134,59 @@ public class ImagePuzzlePanel extends javax.swing.JPanel implements PropertyChan
         List<Integer> seq = model.getRevealSequence();
         if (seq != null) {
 
+
+
             // draw hiding tiles
             g.setColor(getColor());
             for (int tile : seq) {
                 Rectangle r = getTileBounds(tile);
                 g.fillRect(r.x, r.y, r.width, r.height);
-                if (model.isDelayedTile(tile)) {
+                if (model.isDelayedTile(tile) && isTransparent()) {
                     Graphics2D g2 = (Graphics2D) g.create(r.x, r.y, r.width, r.height);
                     g2.rotate(-.5);
                     g2.setColor(Color.RED);
                     int dist = 9;
-                    for (int i = -3; i < Math.floor(1.0 * r.width / dist); i++) {
-                        g2.drawLine(i*dist, 0, i*dist, r.height *2);
+                    for (int i = -8; i < Math.floor(1.0 * r.width / dist); i++) {
+                        g2.drawLine(i * dist, 0, i * dist, r.height * 2);
                     }
                 }
             }
 
-            // paint team names
+            Graphics2D g2 = (Graphics2D) g;
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+                    RenderingHints.VALUE_ANTIALIAS_ON);
+
+            final int w = getWidth(),
+                    h = getHeight();
+
+            int strW, x, y;
+
+            int fontSize = (int) Math.round(w / 64 * screenRes / 72.0);
+            Font font = new Font("Arial", Font.BOLD, fontSize);
+            FontMetrics metrics = g2.getFontMetrics(font);
+
+            // paint buzz block countdown
+            int size = (int) Math.max(h / 6.0, 80);
+            paintCountdown((Graphics2D) g2.create(10, 10, size, size), 0);
+            paintCountdown((Graphics2D) g2.create(w - 10 - size, 10, size, size), 1);
+
+
+            // paint team names during buzz
             if (teamName != null) {
 
-                Graphics2D g2 = (Graphics2D) g;
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-                        RenderingHints.VALUE_ANTIALIAS_ON);
+                final int paddingX = 80, paddingY = 20;
 
-                int paddingX = 80, paddingY = 20;
-                int w = getWidth(),
-                        h = getHeight();
+                fontSize = (int) Math.round(w / 8 * screenRes / 72.0);
+                font = new Font("Arial", Font.BOLD, fontSize);
+                metrics = g2.getFontMetrics(font);
 
-                int fontSize = (int) Math.round(w / 8 * screenRes / 72.0);
-                Font font = new Font("Arial", Font.BOLD, fontSize);
-                FontMetrics metrics = g2.getFontMetrics(font);
-
-                int strW = metrics.stringWidth(teamName);
+                strW = metrics.stringWidth(teamName);
                 g2.setFont(font);
-                int x = (w - strW - paddingX) / 2,
-                        y = (h - metrics.getHeight()) - 2 * paddingY;
+                x = (w - strW - paddingX) / 2;
+                y = (h - metrics.getHeight()) - 2 * paddingY;
 
                 // draw rectangular background
-                g2.setColor(new Color(0, 0, 0, 120));
+                g2.setColor(transparentColor);
                 g2.fillRect(x, y, strW + paddingX, metrics.getHeight() + paddingY);
                 g2.setColor(getCountdownColor());
                 g2.fillRect(x, y, (int) ((strW + paddingX) * (1 - buzzCountdown)), metrics.getHeight() + paddingY);
@@ -244,8 +264,7 @@ public class ImagePuzzlePanel extends javax.swing.JPanel implements PropertyChan
                 try {
                     scaledImage = get();
                     repaint();
-                } catch (InterruptedException ignore) {
-                } catch (ExecutionException e) {
+                } catch (InterruptedException | ExecutionException ignore) {
                 }
             }
         }.execute();
@@ -326,5 +345,32 @@ public class ImagePuzzlePanel extends javax.swing.JPanel implements PropertyChan
     public void setCountDownColor(Color countDownColor) {
         this.countDownColor = countDownColor;
     }
-    
+
+    private void paintCountdown(Graphics2D g, int teamId) {
+
+        final float remaining = model.getNumberOfBlockedTilesForTeam(teamId);
+
+        if (remaining == 0) {
+            return;
+        }
+
+        final float total = model.getDurationBlocked();
+        final float percentage = remaining / total;
+        final Rectangle b = g.getClipBounds();
+        final int strokeWidth = b.width / 8;
+        final Stroke s = new BasicStroke(strokeWidth);
+        g.setColor(transparentColor);
+        g.fillArc(1, 1, b.width - 2, b.height - 2, 0, 360);
+        g.setColor(countdownColor);
+        g.setStroke(s);
+        g.drawArc(strokeWidth / 2, strokeWidth / 2, b.width - 1 * strokeWidth, b.height - 1 * strokeWidth, 90, (int) (360 * percentage));
+
+        final int fontSize = (int) b.width / 4;
+        Font font = new Font("Arial", Font.BOLD, fontSize);
+        FontMetrics metrics = g.getFontMetrics(font);
+        g.setFont(font);
+        g.setColor(Color.white);
+        g.drawString(String.format("%.0f", remaining), (b.width - metrics.stringWidth(String.format("%.0f", remaining))) / 2, (b.height - metrics.getAscent()) / 2 + metrics.getAscent());
+
+    }
 }
