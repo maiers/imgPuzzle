@@ -78,7 +78,6 @@ public class ControlFrame extends javax.swing.JFrame {
         public void actionPerformed(ActionEvent e) {
 
             if (e.getSource() instanceof JCheckBoxMenuItem) {
-                JCheckBoxMenuItem check = (JCheckBoxMenuItem) e.getSource();
 
                 String id = e.getActionCommand();
                 for (GraphicsDevice d : getScreenDevices()) {
@@ -170,9 +169,9 @@ public class ControlFrame extends javax.swing.JFrame {
                 if (fullScreenTarget != null) {
                     fullScreenTarget.setFullScreenWindow(null);
                 }
+                imagePuzzlePanel1.setTargetAspectRatio(-1);
                 fullScreenTarget = null;
             }
-
 
             if (newTargetDevice != null) {
                 // set new target
@@ -181,6 +180,7 @@ public class ControlFrame extends javax.swing.JFrame {
                 fs.setImagePuzzleModel(imagePuzzlePanel1.getModel());
                 fs.setSize(newTargetDevice.getDisplayMode().getWidth(), newTargetDevice.getDisplayMode().getHeight());
                 fs.setLocation(newTargetDevice.getDefaultConfiguration().getBounds().x, newTargetDevice.getDefaultConfiguration().getBounds().y);
+                imagePuzzlePanel1.setTargetAspectRatio(1.0 * newTargetDevice.getDisplayMode().getWidth() / newTargetDevice.getDisplayMode().getHeight());
                 try {
                     newTargetDevice.setFullScreenWindow(fs);
                 } finally {
@@ -402,20 +402,22 @@ public class ControlFrame extends javax.swing.JFrame {
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 591, Short.MAX_VALUE)
+            .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 684, Short.MAX_VALUE)
         );
 
         splitPaneMain.setLeftComponent(jPanel2);
+
+        imagePuzzlePanel1.setBorder(javax.swing.BorderFactory.createEtchedBorder());
 
         javax.swing.GroupLayout imagePuzzlePanel1Layout = new javax.swing.GroupLayout(imagePuzzlePanel1);
         imagePuzzlePanel1.setLayout(imagePuzzlePanel1Layout);
         imagePuzzlePanel1Layout.setHorizontalGroup(
             imagePuzzlePanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 574, Short.MAX_VALUE)
+            .addGap(0, 570, Short.MAX_VALUE)
         );
         imagePuzzlePanel1Layout.setVerticalGroup(
             imagePuzzlePanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 408, Short.MAX_VALUE)
+            .addGap(0, 493, Short.MAX_VALUE)
         );
 
         sliderSpeed.setMajorTickSpacing(1);
@@ -430,12 +432,13 @@ public class ControlFrame extends javax.swing.JFrame {
         sliderSpeed.setModel(imagePuzzlePanel1.getModel().getSpeedModel());
         Hashtable<Integer,JComponent> labelTable = new Hashtable<>();
         labelTable.put( new Integer( 1 ), new JLabel("Pretty fast") );
-        labelTable.put( new Integer( 5 ), new JLabel("Average") );
-        labelTable.put( new Integer( 10 ), new JLabel("Really slow") );
+        labelTable.put( new Integer( 8 ), new JLabel("Average") );
+        labelTable.put( new Integer( 12 ), new JLabel("Really slow") );
         sliderSpeed.setLabelTable( labelTable );
 
         labelSlider.setText("Speed");
 
+        buttonRevealImage.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
         buttonRevealImage.setText("Reveal");
         buttonRevealImage.setEnabled(false);
         buttonRevealImage.addActionListener(new java.awt.event.ActionListener() {
@@ -446,6 +449,7 @@ public class ControlFrame extends javax.swing.JFrame {
 
         progressBarPictureVisible.setModel(imagePuzzlePanel1.getModel().getProgressModel());
 
+        buttonNextImage.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
         buttonNextImage.setText("Next");
         buttonNextImage.setEnabled(false);
         buttonNextImage.addActionListener(new java.awt.event.ActionListener() {
@@ -454,6 +458,7 @@ public class ControlFrame extends javax.swing.JFrame {
             }
         });
 
+        buttonStart.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
         buttonStart.setText("Start");
         buttonStart.setEnabled(false);
         buttonStart.addActionListener(new java.awt.event.ActionListener() {
@@ -462,6 +467,7 @@ public class ControlFrame extends javax.swing.JFrame {
             }
         });
 
+        butonStop.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
         butonStop.setText("Stop");
         butonStop.setEnabled(false);
         butonStop.addActionListener(new java.awt.event.ActionListener() {
@@ -477,20 +483,21 @@ public class ControlFrame extends javax.swing.JFrame {
             .addGroup(controlPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(controlPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(buttonStart, javax.swing.GroupLayout.PREFERRED_SIZE, 95, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(labelSlider, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(controlPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(controlPanelLayout.createSequentialGroup()
-                        .addComponent(butonStop)
+                        .addComponent(buttonStart, javax.swing.GroupLayout.PREFERRED_SIZE, 103, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(butonStop, javax.swing.GroupLayout.PREFERRED_SIZE, 72, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(buttonRevealImage, javax.swing.GroupLayout.PREFERRED_SIZE, 95, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(progressBarPictureVisible, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(progressBarPictureVisible, javax.swing.GroupLayout.DEFAULT_SIZE, 187, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(buttonNextImage, javax.swing.GroupLayout.PREFERRED_SIZE, 94, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addContainerGap())
-                    .addComponent(sliderSpeed, javax.swing.GroupLayout.DEFAULT_SIZE, 484, Short.MAX_VALUE)))
+                        .addComponent(buttonNextImage, javax.swing.GroupLayout.PREFERRED_SIZE, 94, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(controlPanelLayout.createSequentialGroup()
+                        .addComponent(labelSlider, javax.swing.GroupLayout.PREFERRED_SIZE, 57, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(sliderSpeed, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                .addContainerGap())
         );
         controlPanelLayout.setVerticalGroup(
             controlPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -498,10 +505,10 @@ public class ControlFrame extends javax.swing.JFrame {
                 .addContainerGap()
                 .addGroup(controlPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(progressBarPictureVisible, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(buttonNextImage, javax.swing.GroupLayout.DEFAULT_SIZE, 84, Short.MAX_VALUE)
+                    .addComponent(buttonNextImage, javax.swing.GroupLayout.DEFAULT_SIZE, 88, Short.MAX_VALUE)
+                    .addComponent(buttonStart, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(buttonRevealImage, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(butonStop, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(buttonStart, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(butonStop, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(controlPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(sliderSpeed, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 54, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -523,9 +530,9 @@ public class ControlFrame extends javax.swing.JFrame {
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(imagePuzzlePanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(imagePuzzlePanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(controlPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addComponent(controlPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
 
         splitPaneMain.setRightComponent(jPanel1);
@@ -630,7 +637,7 @@ public class ControlFrame extends javax.swing.JFrame {
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(splitPaneMain, javax.swing.GroupLayout.DEFAULT_SIZE, 800, Short.MAX_VALUE)
+            .addComponent(splitPaneMain)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)

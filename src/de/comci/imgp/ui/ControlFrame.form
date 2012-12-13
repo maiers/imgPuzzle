@@ -282,7 +282,7 @@
   <Layout>
     <DimensionLayout dim="0">
       <Group type="103" groupAlignment="0" attributes="0">
-          <Component id="splitPaneMain" alignment="0" pref="800" max="32767" attributes="0"/>
+          <Component id="splitPaneMain" alignment="0" max="32767" attributes="0"/>
       </Group>
     </DimensionLayout>
     <DimensionLayout dim="1">
@@ -319,7 +319,7 @@
             </DimensionLayout>
             <DimensionLayout dim="1">
               <Group type="103" groupAlignment="0" attributes="0">
-                  <Component id="jScrollPane1" alignment="1" pref="591" max="32767" attributes="0"/>
+                  <Component id="jScrollPane1" alignment="1" pref="684" max="32767" attributes="0"/>
               </Group>
             </DimensionLayout>
           </Layout>
@@ -372,15 +372,22 @@
               <Group type="103" groupAlignment="0" attributes="0">
                   <Group type="102" alignment="0" attributes="0">
                       <EmptySpace max="-2" attributes="0"/>
-                      <Component id="imagePuzzlePanel1" min="-2" max="-2" attributes="0"/>
+                      <Component id="imagePuzzlePanel1" max="32767" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
-                      <Component id="controlPanel" max="32767" attributes="0"/>
+                      <Component id="controlPanel" min="-2" max="-2" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>
           </Layout>
           <SubComponents>
             <Container class="de.comci.imgp.ui.ImagePuzzlePanel" name="imagePuzzlePanel1">
+              <Properties>
+                <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
+                  <Border info="org.netbeans.modules.form.compat2.border.EtchedBorderInfo">
+                    <EtchetBorder/>
+                  </Border>
+                </Property>
+              </Properties>
               <AuxValues>
                 <AuxValue name="JavaCodeGenerator_CreateCodePost" type="java.lang.String" value="imagePuzzlePanel1.setTransparent(true);&#xd;&#xa;&#xd;&#xa;imagePuzzlePanel1.getModel().addStateChangeListener(getButtonControlByModelState());"/>
               </AuxValues>
@@ -388,12 +395,12 @@
               <Layout>
                 <DimensionLayout dim="0">
                   <Group type="103" groupAlignment="0" attributes="0">
-                      <EmptySpace min="0" pref="574" max="32767" attributes="0"/>
+                      <EmptySpace min="0" pref="570" max="32767" attributes="0"/>
                   </Group>
                 </DimensionLayout>
                 <DimensionLayout dim="1">
                   <Group type="103" groupAlignment="0" attributes="0">
-                      <EmptySpace min="0" pref="408" max="32767" attributes="0"/>
+                      <EmptySpace min="0" pref="493" max="32767" attributes="0"/>
                   </Group>
                 </DimensionLayout>
               </Layout>
@@ -406,23 +413,24 @@
                       <Group type="102" attributes="0">
                           <EmptySpace max="-2" attributes="0"/>
                           <Group type="103" groupAlignment="0" attributes="0">
-                              <Component id="buttonStart" min="-2" pref="95" max="-2" attributes="0"/>
-                              <Component id="labelSlider" max="32767" attributes="0"/>
-                          </Group>
-                          <EmptySpace max="-2" attributes="0"/>
-                          <Group type="103" groupAlignment="0" attributes="0">
                               <Group type="102" attributes="0">
-                                  <Component id="butonStop" min="-2" max="-2" attributes="0"/>
+                                  <Component id="buttonStart" min="-2" pref="103" max="-2" attributes="0"/>
+                                  <EmptySpace max="-2" attributes="0"/>
+                                  <Component id="butonStop" min="-2" pref="72" max="-2" attributes="0"/>
                                   <EmptySpace max="-2" attributes="0"/>
                                   <Component id="buttonRevealImage" min="-2" pref="95" max="-2" attributes="0"/>
                                   <EmptySpace max="-2" attributes="0"/>
-                                  <Component id="progressBarPictureVisible" max="32767" attributes="0"/>
+                                  <Component id="progressBarPictureVisible" pref="187" max="32767" attributes="0"/>
                                   <EmptySpace max="-2" attributes="0"/>
                                   <Component id="buttonNextImage" min="-2" pref="94" max="-2" attributes="0"/>
-                                  <EmptySpace max="-2" attributes="0"/>
                               </Group>
-                              <Component id="sliderSpeed" pref="484" max="32767" attributes="0"/>
+                              <Group type="102" attributes="0">
+                                  <Component id="labelSlider" min="-2" pref="57" max="-2" attributes="0"/>
+                                  <EmptySpace max="-2" attributes="0"/>
+                                  <Component id="sliderSpeed" max="32767" attributes="0"/>
+                              </Group>
                           </Group>
+                          <EmptySpace max="-2" attributes="0"/>
                       </Group>
                   </Group>
                 </DimensionLayout>
@@ -432,10 +440,10 @@
                           <EmptySpace max="-2" attributes="0"/>
                           <Group type="103" groupAlignment="1" attributes="0">
                               <Component id="progressBarPictureVisible" max="32767" attributes="0"/>
-                              <Component id="buttonNextImage" pref="84" max="32767" attributes="0"/>
-                              <Component id="buttonRevealImage" alignment="1" max="32767" attributes="0"/>
-                              <Component id="butonStop" alignment="1" max="32767" attributes="0"/>
+                              <Component id="buttonNextImage" pref="88" max="32767" attributes="0"/>
                               <Component id="buttonStart" alignment="0" max="32767" attributes="0"/>
+                              <Component id="buttonRevealImage" alignment="1" max="32767" attributes="0"/>
+                              <Component id="butonStop" max="32767" attributes="0"/>
                           </Group>
                           <EmptySpace max="-2" attributes="0"/>
                           <Group type="103" groupAlignment="0" attributes="0">
@@ -464,7 +472,7 @@
                     </Property>
                   </Properties>
                   <AuxValues>
-                    <AuxValue name="JavaCodeGenerator_InitCodePost" type="java.lang.String" value="Hashtable&lt;Integer,JComponent&gt; labelTable = new Hashtable&lt;&gt;();&#xd;&#xa;labelTable.put( new Integer( 1 ), new JLabel(&quot;Pretty fast&quot;) );&#xd;&#xa;labelTable.put( new Integer( 5 ), new JLabel(&quot;Average&quot;) );&#xd;&#xa;labelTable.put( new Integer( 10 ), new JLabel(&quot;Really slow&quot;) );&#xd;&#xa;sliderSpeed.setLabelTable( labelTable );"/>
+                    <AuxValue name="JavaCodeGenerator_InitCodePost" type="java.lang.String" value="Hashtable&lt;Integer,JComponent&gt; labelTable = new Hashtable&lt;&gt;();&#xd;&#xa;labelTable.put( new Integer( 1 ), new JLabel(&quot;Pretty fast&quot;) );&#xd;&#xa;labelTable.put( new Integer( 8 ), new JLabel(&quot;Average&quot;) );&#xd;&#xa;labelTable.put( new Integer( 12 ), new JLabel(&quot;Really slow&quot;) );&#xd;&#xa;sliderSpeed.setLabelTable( labelTable );"/>
                   </AuxValues>
                 </Component>
                 <Component class="javax.swing.JLabel" name="labelSlider">
@@ -474,6 +482,9 @@
                 </Component>
                 <Component class="javax.swing.JButton" name="buttonRevealImage">
                   <Properties>
+                    <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
+                      <Font name="Tahoma" size="12" style="1"/>
+                    </Property>
                     <Property name="text" type="java.lang.String" value="Reveal"/>
                     <Property name="enabled" type="boolean" value="false"/>
                   </Properties>
@@ -490,6 +501,9 @@
                 </Component>
                 <Component class="javax.swing.JButton" name="buttonNextImage">
                   <Properties>
+                    <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
+                      <Font name="Tahoma" size="12" style="1"/>
+                    </Property>
                     <Property name="text" type="java.lang.String" value="Next"/>
                     <Property name="enabled" type="boolean" value="false"/>
                   </Properties>
@@ -499,6 +513,9 @@
                 </Component>
                 <Component class="javax.swing.JButton" name="buttonStart">
                   <Properties>
+                    <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
+                      <Font name="Tahoma" size="12" style="1"/>
+                    </Property>
                     <Property name="text" type="java.lang.String" value="Start"/>
                     <Property name="enabled" type="boolean" value="false"/>
                   </Properties>
@@ -508,6 +525,9 @@
                 </Component>
                 <Component class="javax.swing.JButton" name="butonStop">
                   <Properties>
+                    <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
+                      <Font name="Tahoma" size="12" style="1"/>
+                    </Property>
                     <Property name="text" type="java.lang.String" value="Stop"/>
                     <Property name="enabled" type="boolean" value="false"/>
                   </Properties>

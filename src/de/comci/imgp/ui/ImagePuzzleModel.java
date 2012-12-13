@@ -94,6 +94,10 @@ public final class ImagePuzzleModel {
         blockedTeams.put(teamId, revealSequence.size());
     }
 
+    int getTeamLastBuzzedId() {
+        return lastBuzzed;
+    }
+
     public enum GameMode {
 
         PUNISHMENT, NORMAL
@@ -210,7 +214,18 @@ public final class ImagePuzzleModel {
     private List<PropertyChangeListener> propertyListener;
     private List<StateChangeListener> stateListener;
     private BoundedRangeModel speedModel;
-    private Map<Integer, String> teams;
+    private Map<Integer, Team> teams;
+
+    public class Team {
+
+        public final Color color;
+        public final String name;
+
+        public Team(Color color, String name) {
+            this.color = color;
+            this.name = name;
+        }
+    }
 
     public BoundedRangeModel getSpeedModel() {
         return speedModel;
@@ -223,8 +238,8 @@ public final class ImagePuzzleModel {
         delayedTiles = new LinkedList<>();
         state = GameState.UNINITIALIZED;
         teams = new HashMap<>();
-        teams.put(0, "Team 1");
-        teams.put(1, "Team 2");
+        teams.put(0, new Team(new Color(23, 156, 125), "Team Grün"));
+        teams.put(1, new Team(new Color(235, 106, 10), "Team Gelb"));
         blockedTeams = new HashMap<>();
         progressModel = new DefaultBoundedRangeModel(0, 0, 0, numberOfTiles);
         speedModel = new DefaultBoundedRangeModel(10, 0, 1, 12);
@@ -270,6 +285,7 @@ public final class ImagePuzzleModel {
                     revealNext();
                 }
             });
+            revealTimer.setInitialDelay(getSpeedAsDelay() / 2);
             revealTimer.start();
             setState(GameState.RUNNING);
 
@@ -355,6 +371,7 @@ public final class ImagePuzzleModel {
     public void reveal() {
         progressModel.setValue(progressModel.getMaximum());
         revealSequence.clear();
+        resetBuzzTimer();
         stopRevealTimer();
         setState(GameState.REVEALED);
     }
@@ -362,9 +379,8 @@ public final class ImagePuzzleModel {
     public int getSpeedAsDelay() {
         return speedModel.getValue() * 200;
     }
-    
     private List<Integer> revealSequence;
-    
+
     public synchronized int getNumberOfBlockedTilesForTeam(int teamId) {
         if (!blockedTeams.containsKey(teamId)) {
             return 0;
@@ -380,7 +396,7 @@ public final class ImagePuzzleModel {
             System.out.println(String.format("revealed item %d", r));
 
             // count down on team block timer
-            for (Iterator<Integer> i = blockedTeams.values().iterator(); i.hasNext(); ) {
+            for (Iterator<Integer> i = blockedTeams.values().iterator(); i.hasNext();) {
                 if (i.next() - durationBlocked > revealSequence.size()) {
                     // remove block information if down to zero
                     i.remove();
@@ -442,9 +458,17 @@ public final class ImagePuzzleModel {
 
     public void reset() {
         delayedTiles.clear();
+        resetBuzzTimer();
         stop();
         initRevealSequence();
         resetTimer();
+    }
+    
+    private void resetBuzzTimer() {
+        if (buzzTimer != null) {
+            buzzTimer.stop();
+        }
+        blockedTeams.clear();
     }
 
     public boolean isDelayedTile(int tileNumber) {
@@ -512,11 +536,11 @@ public final class ImagePuzzleModel {
         return Collections.unmodifiableList(revealSequence);
     }
 
-    public int getTeamLastBuzzed() {
-        return lastBuzzed;
+    public Team getTeamLastBuzzed() {
+        return teams.get(lastBuzzed);
     }
 
-    public String getTeamName(int id) {
+    public Team getTeam(int id) {
         return teams.get(id);
     }
 
@@ -537,5 +561,4 @@ public final class ImagePuzzleModel {
         executeBuzz();
 
     }
-    
 }

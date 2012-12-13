@@ -49,7 +49,7 @@ class ImagePuzzleSounds implements StateChangeListener {
     public void stateChanged(StateChangeEvent evt) {
 
         if (evt.getNewState() == GameState.BUZZED) {
-            int teamId = evt.getSrcModel().getTeamLastBuzzed();
+            int teamId = evt.getSrcModel().getTeamLastBuzzedId();
             try {
                 // source: http://www3.ntu.edu.sg/home/ehchua/programming/java/J8c_PlayingSound.html
                 AudioInputStream audioIn = AudioSystem.getAudioInputStream(teamSounds.get(teamId));
@@ -62,6 +62,7 @@ class ImagePuzzleSounds implements StateChangeListener {
                 Logger.getLogger(ImagePuzzleSounds.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-
+        
     }
+    
 }

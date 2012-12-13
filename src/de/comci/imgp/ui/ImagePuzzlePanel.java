@@ -4,6 +4,7 @@
  */
 package de.comci.imgp.ui;
 
+import de.comci.imgp.ui.ImagePuzzleModel.Team;
 import static de.comci.imgp.ui.ImageUtil.*;
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -13,10 +14,10 @@ import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
+import java.awt.Insets;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
-import java.awt.Shape;
 import java.awt.Stroke;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
@@ -45,6 +46,19 @@ public class ImagePuzzlePanel extends javax.swing.JPanel implements PropertyChan
     private Color countDownColor;
     final private Color transparentColor = new Color(0, 0, 0, 120);
     private final Color countdownColor = new Color(235, 106, 1, 100);
+    private double targetAspectRatio = -1; // width / height
+
+    public double getAspectTargetRatio() {
+        return targetAspectRatio;
+    }
+
+    public double getAspectRatio() {
+        return 1.0 * getWidth() / getHeight();
+    }
+
+    public void setTargetAspectRatio(double aspectRatio) {
+        this.targetAspectRatio = aspectRatio;
+    }
 
     public boolean isTransparent() {
         return showImage;
@@ -94,14 +108,39 @@ public class ImagePuzzlePanel extends javax.swing.JPanel implements PropertyChan
         });
         updateTileSize();
     }
+    
+    private Rectangle getAvailableBounds() {
+        Insets i = getInsets();
+
+        // use aspect ratio
+        double currentAspectRatio = getAspectRatio();
+        if (targetAspectRatio != -1) {
+            System.out.println("changed target ratio");
+            // adjust aspect ratio
+            if (targetAspectRatio > currentAspectRatio) {
+                // increase
+                i.top = getHeight() - (int)(getWidth() / targetAspectRatio) / 2;
+                i.bottom = getHeight() - (int)(getWidth() / targetAspectRatio) / 2;
+            } else {
+                // decrease
+                i.left = getWidth() - (int)(getHeight() * targetAspectRatio) / 2;
+                i.right = getWidth() - (int)(getHeight() * targetAspectRatio) / 2;                
+            }
+        }               
+        
+        return new Rectangle(i.left, i.top, getWidth() - i.left - i.right, getHeight() - i.left - i.right);
+    }
+    
+    
 
     private void updateTileSize() {
-        tileWidth = getWidth() / model.getNumberOfTilesHorizontal();
-        tileHeight = getHeight() / model.getNumberOfTilesVertical();
-        while (tileWidth * model.getNumberOfTilesHorizontal() < getWidth()) {
+        Rectangle b = getAvailableBounds();
+        tileWidth = b.width / model.getNumberOfTilesHorizontal();
+        tileHeight = b.height / model.getNumberOfTilesVertical();
+        while (tileWidth * model.getNumberOfTilesHorizontal() < b.width) {
             tileWidth++;
         }
-        while (tileHeight * model.getNumberOfTilesVertical() < getHeight()) {
+        while (tileHeight * model.getNumberOfTilesVertical() < b.height) {
             tileHeight++;
         }
     }
@@ -122,7 +161,7 @@ public class ImagePuzzlePanel extends javax.swing.JPanel implements PropertyChan
         rectangle.height = tileHeight;
         return rectangle;
     }
-
+    
     @Override
     protected void paintComponent(Graphics g) {
 
@@ -131,10 +170,11 @@ public class ImagePuzzlePanel extends javax.swing.JPanel implements PropertyChan
         if (scaledImage != null) {
             g.drawImage(scaledImage, 0, 0, this);
         }
+        
+        final Rectangle b = getAvailableBounds();
+        
         List<Integer> seq = model.getRevealSequence();
         if (seq != null) {
-
-
 
             // draw hiding tiles
             g.setColor(getColor());
@@ -156,8 +196,8 @@ public class ImagePuzzlePanel extends javax.swing.JPanel implements PropertyChan
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
                     RenderingHints.VALUE_ANTIALIAS_ON);
 
-            final int w = getWidth(),
-                    h = getHeight();
+            final int w = b.width,
+                      h = b.height;
 
             int strW, x, y;
 
@@ -172,15 +212,15 @@ public class ImagePuzzlePanel extends javax.swing.JPanel implements PropertyChan
 
 
             // paint team names during buzz
-            if (teamName != null) {
+            if (team != null) {
 
                 final int paddingX = 80, paddingY = 20;
 
-                fontSize = (int) Math.round(w / 8 * screenRes / 72.0);
+                fontSize = (int) Math.round(w / 12 * screenRes / 72.0);
                 font = new Font("Arial", Font.BOLD, fontSize);
                 metrics = g2.getFontMetrics(font);
 
-                strW = metrics.stringWidth(teamName);
+                strW = metrics.stringWidth(team.name);
                 g2.setFont(font);
                 x = (w - strW - paddingX) / 2;
                 y = (h - metrics.getHeight()) - 2 * paddingY;
@@ -188,10 +228,10 @@ public class ImagePuzzlePanel extends javax.swing.JPanel implements PropertyChan
                 // draw rectangular background
                 g2.setColor(transparentColor);
                 g2.fillRect(x, y, strW + paddingX, metrics.getHeight() + paddingY);
-                g2.setColor(getCountdownColor());
+                g2.setColor(team.color);
                 g2.fillRect(x, y, (int) ((strW + paddingX) * (1 - buzzCountdown)), metrics.getHeight() + paddingY);
                 g2.setColor(Color.white);
-                g2.drawString(teamName, x + paddingX / 2, y + metrics.getAscent() + paddingY / 2);
+                g2.drawString(team.name, x + paddingX / 2, y + metrics.getAscent() + paddingY / 2);
 
             }
 
@@ -206,6 +246,12 @@ public class ImagePuzzlePanel extends javax.swing.JPanel implements PropertyChan
             return model.getTileColor();
         }
     }
+    
+    Dimension getAvailableSize() {
+        Rectangle i = getAvailableBounds();
+        return new Dimension(i.width, i.height);
+    }
+    
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -251,7 +297,7 @@ public class ImagePuzzlePanel extends javax.swing.JPanel implements PropertyChan
             @Override
             protected Image doInBackground() throws Exception {
 
-                double scaleFactor = Math.min(1d, getScaleFactorToFill(new Dimension(image.getWidth(ImagePuzzlePanel.this), image.getHeight(ImagePuzzlePanel.this)), getSize()));
+                double scaleFactor = Math.min(1d, getScaleFactorToFill(new Dimension(image.getWidth(ImagePuzzlePanel.this), image.getHeight(ImagePuzzlePanel.this)), getAvailableSize()));
 
                 int scaleWidth = (int) Math.round(image.getWidth(ImagePuzzlePanel.this) * scaleFactor);
                 int scaleHeight = (int) Math.round(image.getHeight(ImagePuzzlePanel.this) * scaleFactor);
@@ -279,7 +325,7 @@ public class ImagePuzzlePanel extends javax.swing.JPanel implements PropertyChan
         }
 
     }
-    private String teamName = null;
+    private Team team = null;
 
     @Override
     public void stateChanged(StateChangeEvent evt) {
@@ -289,18 +335,18 @@ public class ImagePuzzlePanel extends javax.swing.JPanel implements PropertyChan
         switch (evt.getNewState()) {
             case READY:
                 stopBuzzCountdown();
-                teamName = null;
+                team = null;
                 scaleImage(model.getRawImage());
                 break;
             case RUNNING:
             case HALTED:
             case REVEALED:
                 stopBuzzCountdown();
-                teamName = null;
+                team = null;
                 repaint();
                 break;
             case BUZZED:
-                teamName = model.getTeamName(model.getTeamLastBuzzed());
+                team = model.getTeamLastBuzzed();
                 startBuzzCountdown();
                 repaint();
                 break;

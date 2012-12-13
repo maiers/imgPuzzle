@@ -4,13 +4,11 @@
  */
 package de.comci.imgp.ui;
 
-import de.comci.imgp.ui.ImagePuzzleModel.GameState;
-
 /**
  *
  * @author Sebastian
  */
-interface StateChangeListener {
+public interface StateChangeListener {
     
     public void stateChanged(StateChangeEvent evt);
         
