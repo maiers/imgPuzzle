@@ -1,7 +1,7 @@
 Image Puzzle
 =========
 
-A simple image puzzle game. 
+A simple image puzzle game. Where an image is initially completely hidden behind a matrix of tiles. The game allows for two players or teams to play against each other. There is rudimentary support for a buzzer (using a keyboard - or two) with a team being blocked for a certain amount of time after a wrong guess. Tiles will be removed randomly,  but there is an option to mark a number of tiles to be removed at the end only. This should help in keeping the most significant features of an image hidden long enough to create an interesing game. The game supports multi monitor setup.
 
 - Select a directory containing JPGs as input
 - define speed and number of tiles
